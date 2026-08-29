@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide Your Own Path — Campaign Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161f; --panel:#1b1e28; --raised:#232734; --line:#30354598;
+  --line-solid:#303545; --ink:#d8d3c3; --bone:#ece6d6; --muted:#8a8fa0;
+  --verd:#6cc0a1; --verd-deep:#3f8f75; --violet:#a596e0; --rust:#dd6b57;
+  --gold:#d3b483; --shadow:0 1px 0 #ffffff08, 0 8px 24px -12px #000000aa;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Spectral",Georgia,serif; font-size:16px; line-height:1.55;
+  background-image:radial-gradient(1200px 600px at 80% -10%, #1e2a2833 0, transparent 60%),
+                   radial-gradient(900px 500px at -10% 110%, #241f2e40 0, transparent 60%);
+}
+h1,h2,h3{font-family:"IM Fell English",Georgia,serif; font-weight:400; color:var(--bone); margin:0}
+a{color:var(--verd); text-decoration:none}
+a:hover{color:var(--bone)}
+button{font-family:inherit; cursor:pointer; border:none}
+
+/* Masthead */
+.masthead{position:sticky; top:0; z-index:50; background:#14161fee; backdrop-filter:blur(10px); border-bottom:1px solid var(--line-solid)}
+.masthead-inner{max-width:1000px; margin:0 auto; padding:18px 20px; display:flex; gap:24px; align-items:center; flex-wrap:wrap}
+.brand{display:flex; flex-direction:column; line-height:1; flex:1}
+.brand .title{font-family:"IM Fell English",serif; font-size:1.4rem; color:var(--bone); letter-spacing:.02em; display:flex; align-items:center; gap:12px}
+.brand .ico{width:28px; height:28px; color:var(--verd); flex-shrink:0}
+.brand .campaign{font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-top:6px}
+
+.mh-toggle{display:flex; gap:8px}
+.toggle-btn{background:var(--raised); border:1px solid var(--line-solid); color:var(--ink); border-radius:8px; padding:8px 14px; font-size:.78rem; transition:.12s}
+.toggle-btn.on{background:var(--verd-deep); border-color:var(--verd); color:#eafff6}
+.toggle-btn:hover:not(.on){border-color:var(--verd-deep); color:var(--bone)}
+
+/* Main */
+.wrap{max-width:1000px; margin:0 auto; padding:32px 20px 80px}
+
+/* Hero card */
+.hero{background:var(--panel); border:1px solid var(--line-solid); border-radius:16px; box-shadow:var(--shadow); padding:40px 36px; text-align:center; margin-bottom:40px}
+.hero h2{font-size:1.8rem; margin-bottom:8px}
+.hero .subtitle{font-size:1rem; color:var(--muted); font-style:italic; max-width:60ch; margin:0 auto 16px}
+.hero .dm-badge{display:inline-block; background:var(--violet); color:#fff; padding:4px 12px; border-radius:20px; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; font-family:"JetBrains Mono",monospace; margin-top:8px}
+.hero-actions{display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap}
+.hero-btn{background:var(--verd-deep); border:1px solid var(--verd); color:#eafff6; border-radius:10px; padding:10px 18px; font-size:.85rem; transition:.12s; text-decoration:none; display:inline-flex; align-items:center; gap:8px}
+.hero-btn:hover{background:var(--verd); color:#0b1512}
+.hero-btn .ico{width:16px; height:16px}
+
+/* Grid */
+.section{margin-bottom:48px}
+.section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:20px}
+.section-head h3{font-size:1.3rem}
+.section-head .count{font-size:.75rem; color:var(--muted); font-style:italic}
+
+.tools-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px}
+.tool-card{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; box-shadow:var(--shadow); padding:20px; transition:.14s; display:flex; flex-direction:column; text-decoration:none; color:var(--ink)}
+.tool-card:hover{border-color:var(--verd); transform:translateY(-2px)}
+.tool-card .tc-ico{width:32px; height:32px; color:var(--verd); margin-bottom:12px; display:block}
+.tool-card .tc-name{font-family:"IM Fell English",serif; font-size:1.1rem; color:var(--bone); font-weight:500; margin-bottom:6px}
+.tool-card .tc-desc{font-size:.85rem; color:var(--muted); line-height:1.4; flex:1}
+.tool-card .tc-meta{font-size:.7rem; color:var(--gold); font-family:"JetBrains Mono",monospace; margin-top:10px}
+
+/* Info card */
+.info-card{background:var(--raised); border:1px solid var(--line-solid); border-radius:12px; padding:20px; margin-bottom:20px}
+.info-head{font-family:"IM Fell English",serif; font-size:1.05rem; color:var(--bone); margin-bottom:12px; display:flex; align-items:center; gap:8px}
+.info-ico{width:20px; height:20px; color:var(--verd)}
+.info-body{font-size:.9rem; color:var(--ink); line-height:1.6}
+.info-body p{margin:0 0 8px; display:flex; align-items:flex-start; gap:8px}
+.info-body strong{color:var(--bone)}
+
+.setup-step{margin:12px 0; padding-left:28px; position:relative}
+.setup-step::before{content:"→"; position:absolute; left:8px; color:var(--verd); font-weight:bold}
+
+/* Copy button */
+.copy-btn{background:transparent; border:1px solid var(--verd-deep); color:var(--verd); border-radius:6px; padding:4px 10px; font-size:.75rem; cursor:pointer; transition:.12s; margin-left:8px}
+.copy-btn:hover{background:var(--verd); color:#0b1512}
+.link-code{font-family:"JetBrains Mono",monospace; background:var(--raised); padding:2px 6px; border-radius:4px; color:var(--gold); font-size:.85rem}
+
+/* Empty state */
+.empty{text-align:center; padding:40px 20px; color:var(--muted); font-style:italic}
+
+@media(max-width:680px){
+  .masthead-inner{gap:12px}
+  .brand .title{font-size:1.2rem}
+  .hero{padding:24px}
+  .tools-grid{grid-template-columns:1fr}
+  .hero-actions{flex-direction:column}
+  .hero-btn{width:100%; justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <div class="title">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5.8L20 9l-4.5 4 1.3 6L12 16l-4.8 3 1.3-6L4 9l5.6-1.2L12 2Z"/></svg>
+        Decide Your Own Path
+      </div>
+      <div class="campaign" id="campaignName">Campaign Portal</div>
+    </div>
+    <div class="mh-toggle">
+      <button class="toggle-btn on" id="playerToggle" data-role="player">Player View</button>
+      <button class="toggle-btn" id="dmToggle" data-role="dm">DM View</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h2>Welcome, Adventurer</h2>
+    <p class="subtitle">Your campaign awaits. Choose a tool below to begin your journey.</p>
+    <div id="dmBadge"></div>
+    <div class="hero-actions">
+      <a href="#" class="hero-btn" id="driveLink" target="_blank" rel="noopener" style="display:none">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        Shared Folder
+      </a>
+    </div>
+  </div>
+
+  <!-- Player Tools -->
+  <div id="playerSection">
+    <div class="section">
+      <div class="section-head">
+        <h3>Your Tools</h3>
+      </div>
+      <div class="tools-grid">
+        <a href="#" data-tool="builder" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="tc-name">Character Builder</div>
+          <div class="tc-desc">Create and level up your character sheet</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+        <a href="#" data-tool="journal" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <div class="tc-name">Adventure Journal</div>
+          <div class="tc-desc">Record locations, NPCs, quests, and memories</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+        <a href="#" data-tool="compendium" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h6M9 11h4"/></svg>
+          <div class="tc-name">Compendium & Bestiary</div>
+          <div class="tc-desc">Reference rules, creatures, and lore</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="info-card">
+        <div class="info-head">
+          <svg class="info-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+          How to Use
+        </div>
+        <div class="info-body">
+          <p><strong>1. Character Builder:</strong> Create your character sheet or load an existing one. Export it as JSON and save to the shared folder (ask the DM for the link).</p>
+          <p><strong>2. Adventure Journal:</strong> Record your discoveries, NPCs you meet, quests, and memories as you adventure.</p>
+          <p><strong>3. Compendium:</strong> Reference rules, creature stats, and world lore during play.</p>
+          <p><strong>💾 Saving:</strong> All tools auto-save to your browser. Export your data regularly as backup.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DM Tools (hidden by default) -->
+  <div id="dmSection" style="display:none">
+    <div class="section">
+      <div class="section-head">
+        <h3>DM Tools</h3>
+      </div>
+      <div class="tools-grid">
+        <a href="#" data-tool="encounter" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <div class="tc-name">Encounter Control</div>
+          <div class="tc-desc">Track combat, load player sheets, manage initiative</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+        <a href="#" data-tool="loom" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5.8L20 9l-4.5 4 1.3 6L12 16l-4.8 3 1.3-6L4 9l5.6-1.2L12 2Z"/></svg>
+          <div class="tc-name">The Loom (Forge & Codex)</div>
+          <div class="tc-desc">Worldbuild with Claude, organize your campaign notes</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+        <a href="#" data-tool="journal" target="_blank" rel="noopener" class="tool-card">
+          <svg class="tc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <div class="tc-name">Campaign Journal</div>
+          <div class="tc-desc">Track sessions, NPCs, plot hooks, and world state</div>
+          <div class="tc-meta">→ Opens in new tab</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="info-card">
+        <div class="info-head">
+          <svg class="info-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S0 20.6 0 14 5.4 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+          DM Quick Start
+        </div>
+        <div class="info-body">
+          <div class="setup-step"><strong>Share this link with players</strong> (or upload this file to your shared Drive)</div>
+          <div class="setup-step"><strong>Create a shared Google Drive folder</strong> for character sheets and session notes</div>
+          <div class="setup-step"><strong>Use Encounter Control</strong> to load player sheets mid-session (import the JSON files)</div>
+          <div class="setup-step"><strong>The Loom</strong> is where you worldbuild and track campaign state</div>
+          <div class="setup-step"><strong>Keep a Campaign Journal</strong> to record what happened each session</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="info-card">
+        <div class="info-head">
+          <svg class="info-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+          Setup Instructions
+        </div>
+        <div class="info-body">
+          <p><strong>Before your first session:</strong></p>
+          <p class="setup-step">Set up a shared Google Drive folder for your campaign</p>
+          <p class="setup-step">Share the folder link with all players</p>
+          <p class="setup-step">Players create characters in the Character Builder</p>
+          <p class="setup-step">Players export their sheets as JSON and upload to the Drive</p>
+          <p class="setup-step">Import player sheets into Encounter Control when you need them</p>
+          <p style="margin-top:16px; padding-top:16px; border-top:1px solid var(--line-solid)"><strong>Need help?</strong> All tools have built-in export/import — no manual setup required beyond sharing the Drive folder.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const playerSection = document.getElementById("playerSection");
+const dmSection = document.getElementById("dmSection");
+const playerToggle = document.getElementById("playerToggle");
+const dmToggle = document.getElementById("dmToggle");
+const dmBadge = document.getElementById("dmBadge");
+const driveLink = document.getElementById("driveLink");
+const campaignName = document.getElementById("campaignName");
+
+/* ============================================================
+   CAMPAIGN CONFIG — the only part you need to edit
+   ============================================================ */
+const CAMPAIGN = {
+  name: "Tales of Norrath",
+  driveFolder: "https://drive.google.com/drive/folders/1na86nL-HkNgEklsKaCN4i_vu-ysKl3Hc?usp=sharing"
+};
+
+// Where the tools are hosted (GitHub Pages). Keep the trailing slash.
+const BASE = "https://aurickbr.github.io/Decide_Your_Own_Path/";
+
+// File names EXACTLY as they appear in the repository.
+// If you rename a file on GitHub, rename it here too.
+const FILES = {
+  builder:    "character-builder-2.html",
+  journal:    "journal.html",
+  compendium: "compendium-and-bestiary.html",
+  encounter:  "encounter-control.html",
+  loom:       "dm-loom.html"
+};
+
+// Wire every tool card to its URL
+document.querySelectorAll("[data-tool]").forEach(a => {
+  const f = FILES[a.dataset.tool];
+  if (f) a.href = BASE + f;
+});
+
+// View toggle
+function setView(role) {
+  if (role === "dm") {
+    playerSection.style.display = "none";
+    dmSection.style.display = "block";
+    playerToggle.classList.remove("on");
+    dmToggle.classList.add("on");
+    dmBadge.innerHTML = '<span class="dm-badge">🎭 DM Mode</span>';
+    localStorage.setItem("dyop_view", "dm");
+  } else {
+    playerSection.style.display = "block";
+    dmSection.style.display = "none";
+    playerToggle.classList.add("on");
+    dmToggle.classList.remove("on");
+    dmBadge.innerHTML = "";
+    localStorage.setItem("dyop_view", "player");
+  }
+}
+
+// Event listeners
+playerToggle.addEventListener("click", () => setView("player"));
+dmToggle.addEventListener("click", () => setView("dm"));
+
+// Restore view preference
+const savedView = localStorage.getItem("dyop_view") || "player";
+setView(savedView);
+
+// Set campaign name
+campaignName.textContent = CAMPAIGN.name;
+document.title = CAMPAIGN.name + " — Decide Your Own Path";
+
+// Show Drive link if configured
+if (CAMPAIGN.driveFolder) {
+  driveLink.href = CAMPAIGN.driveFolder;
+  driveLink.style.display = "inline-flex";
+}
+</script>
+
+</body>
+</html>
