@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide Your Own Path — Adventure Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161f; --panel:#1b1e28; --raised:#232734; --line:#30354598;
+  --line-solid:#303545; --ink:#d8d3c3; --bone:#ece6d6; --muted:#8a8fa0;
+  --verd:#6cc0a1; --verd-deep:#3f8f75; --violet:#a596e0; --rust:#dd6b57;
+  --gold:#d3b483; --shadow:0 1px 0 #ffffff08, 0 8px 24px -12px #000000aa;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Spectral",Georgia,serif; font-size:16px; line-height:1.55;
+  background-image:radial-gradient(1200px 600px at 80% -10%, #1e2a2833 0, transparent 60%),
+                   radial-gradient(900px 500px at -10% 110%, #241f2e40 0, transparent 60%);
+}
+h1,h2,h3{font-family:"IM Fell English",Georgia,serif; font-weight:400; color:var(--bone); margin:0}
+button{font-family:inherit; cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* masthead */
+.masthead{position:sticky; top:0; z-index:50; background:#14161fee; backdrop-filter:blur(10px); border-bottom:1px solid var(--line-solid)}
+.masthead-inner{max-width:900px; margin:0 auto; padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.brand{display:flex; flex-direction:column; line-height:1}
+.brand .title{font-family:"IM Fell English",serif; font-size:1.15rem; color:var(--bone); letter-spacing:.02em; display:flex; align-items:center; gap:9px}
+.brand .sub{font-size:.66rem; color:var(--muted); font-style:italic; margin-top:4px}
+.brand .ico{width:19px; height:19px; color:var(--verd)}
+.mh-name{margin-left:auto; display:flex; flex-direction:column; gap:3px}
+.mh-name label{font-size:.6rem; text-transform:uppercase; letter-spacing:.14em; color:var(--muted)}
+.mh-name input{background:var(--raised); border:1px solid var(--line-solid); color:var(--bone); border-radius:6px; padding:6px 9px; font-size:.95rem; width:200px; font-family:"IM Fell English",serif}
+.mh-name input:focus{outline:2px solid var(--verd-deep)}
+.io-row{display:flex; gap:7px; flex-wrap:wrap}
+.io-btn{border:1px solid var(--line-solid); background:var(--raised); color:var(--ink); border-radius:8px; padding:7px 12px; font-size:.76rem; letter-spacing:.02em; display:inline-flex; align-items:center; gap:6px; transition:.12s}
+.io-btn:hover{border-color:var(--verd); color:var(--verd)}
+.io-btn.warn:hover{border-color:var(--rust); color:var(--rust)}
+.io-btn .ico{width:15px; height:15px}
+.builder-link{text-decoration:none}
+
+.wrap{max-width:900px; margin:0 auto; padding:22px 20px 80px}
+.card{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; box-shadow:var(--shadow); padding:18px}
+
+/* category pills */
+.cats{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px}
+.cat{display:inline-flex; align-items:center; gap:8px; background:var(--raised); border:1px solid var(--line-solid); color:var(--muted); border-radius:20px; padding:8px 15px; font-family:"IM Fell English",serif; font-size:.92rem; letter-spacing:.03em; transition:.12s}
+.cat:hover:not(.on){color:var(--bone); border-color:var(--verd-deep)}
+.cat.on{background:var(--verd-deep); border-color:var(--verd); color:#eafff6}
+.count{font-family:"JetBrains Mono",monospace; font-size:.66rem; background:#0f111a55; border:1px solid #ffffff1f; color:inherit; border-radius:20px; padding:1px 7px; min-width:20px; text-align:center}
+.cat.on .count{background:#0b151233; border-color:#0b151244}
+
+.sec-intro{font-size:.82rem; color:var(--muted); font-style:italic; margin:0 0 14px}
+
+/* buttons */
+.add-btn{border:1px solid var(--verd-deep); background:transparent; color:var(--verd); border-radius:8px; padding:8px 15px; font-size:.82rem; letter-spacing:.02em; transition:.12s}
+.add-btn:hover{background:var(--verd); color:#0b1512}
+.add-btn.sm{padding:6px 12px; font-size:.78rem}
+.rm-btn{border:1px solid var(--line-solid); background:transparent; color:var(--muted); border-radius:8px; padding:8px 14px; font-size:.8rem; transition:.12s}
+.rm-btn:hover{border-color:var(--rust); color:var(--rust)}
+.pill-btn{border:1px solid var(--line-solid); background:var(--raised); color:var(--ink); border-radius:8px; padding:6px 13px; font-size:.74rem; transition:.12s}
+.pill-btn:hover{border-color:var(--verd); color:var(--verd)}
+.pill-btn.warn:hover{border-color:var(--rust); color:var(--rust)}
+
+.empty{text-align:center; color:var(--muted); font-style:italic; padding:26px}
+
+/* editor */
+.editor{border:1px solid var(--verd-deep); border-radius:10px; background:#16241f; padding:15px; margin-top:8px}
+.editor .etitle{font-family:"IM Fell English",serif; font-size:1.05rem; color:var(--bone); margin-bottom:12px}
+.field{display:block; margin-bottom:12px}
+.flabel{display:block; font-size:.62rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:5px}
+.jin{width:100%; background:#0f111a; border:1px solid var(--line-solid); color:var(--bone); border-radius:8px; padding:9px 12px; font-size:.92rem}
+.jin:focus{outline:2px solid var(--verd-deep)}
+.jarea{resize:vertical; min-height:84px; line-height:1.5}
+.save-row{display:flex; gap:8px; margin-top:6px; border-top:1px solid var(--line); padding-top:13px}
+
+/* cards */
+.jcard{border:1px solid var(--line-solid); border-radius:10px; background:var(--raised); padding:13px 15px; margin-bottom:10px}
+.chead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
+.cname{font-family:"IM Fell English",serif; font-size:1.12rem; color:var(--bone)}
+.cname.general{color:var(--muted); font-style:italic; font-size:.92rem}
+.cmeta{font-size:.7rem; color:var(--gold); font-family:"JetBrains Mono",monospace; letter-spacing:.02em}
+.cbody{font-size:.9rem; color:var(--ink); margin-top:8px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+.cbtns{display:flex; gap:7px; margin-top:12px; flex-wrap:wrap; align-items:center}
+.del-ask{font-size:.82rem; color:var(--rust); font-style:italic; margin-right:2px}
+.jcard.del-pending{border-color:var(--rust)}
+.done-card{opacity:.6}
+.done-card .cname{text-decoration:line-through; text-decoration-color:var(--verd-deep)}
+.done-btn.on{border-color:var(--verd-deep); color:var(--verd)}
+
+/* @mentions */
+.mention{color:var(--verd); text-decoration:none; border-bottom:1px dashed var(--verd-deep); cursor:pointer; font-weight:500}
+.mention:hover{color:var(--bone); border-bottom-color:var(--verd)}
+.jcard.flash{animation:flashRing 1.6s ease}
+@keyframes flashRing{0%,100%{box-shadow:none}12%{box-shadow:0 0 0 2px var(--verd)}}
+.m-tip{position:fixed; z-index:200; max-width:280px; background:var(--panel); border:1px solid var(--verd-deep); border-radius:10px; box-shadow:var(--shadow); padding:11px 13px; opacity:0; pointer-events:none; transition:opacity .12s}
+.m-tip.show{opacity:1}
+.tt-type{font-size:.56rem; text-transform:uppercase; letter-spacing:.14em; color:var(--verd); margin-bottom:3px; font-family:"JetBrains Mono",monospace}
+.tt-title{font-family:"IM Fell English",serif; font-size:1rem; color:var(--bone)}
+.tt-meta{font-size:.66rem; color:var(--gold); font-family:"JetBrains Mono",monospace; margin-top:2px}
+.tt-body{font-size:.8rem; color:var(--muted); line-height:1.45; white-space:pre-wrap; margin-top:6px}
+.tt-done{font-size:.62rem; color:var(--verd); font-family:"JetBrains Mono",monospace; margin-top:5px}
+.ac{position:fixed; z-index:210; min-width:220px; max-width:320px; max-height:230px; overflow:auto; background:var(--panel); border:1px solid var(--verd-deep); border-radius:9px; box-shadow:var(--shadow); padding:5px}
+.ac-item{display:flex; align-items:baseline; gap:9px; padding:7px 9px; border-radius:7px; cursor:pointer}
+.ac-item.on,.ac-item:hover{background:var(--verd-deep)}
+.ai-type{font-size:.54rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-family:"JetBrains Mono",monospace; flex:0 0 auto; padding-top:2px}
+.ac-item.on .ai-type{color:#cdeee2}
+.ai-title{font-size:.86rem; color:var(--bone)}
+.ac-hint{padding:6px 9px; font-size:.68rem; color:var(--muted); font-style:italic}
+
+/* toast */
+.toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--raised); border:1px solid var(--verd-deep); color:var(--bone); padding:10px 18px; border-radius:10px; font-size:.85rem; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.2s; z-index:100}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media print{
+  .masthead .io-row,.cats,.add-btn,.editor .save-row,.cbtns{display:none!important}
+  body{background:#fff; color:#111}
+  .card{border:none; box-shadow:none; padding:0}
+  .jcard{border:1px solid #ccc; break-inside:avoid}
+}
+@media(max-width:560px){ .mh-name input{width:150px} .brand .title{font-size:1rem} }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <div class="title">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h6"/><path d="M9 11h4"/></svg>
+        Adventure Journal
+      </div>
+      <div class="sub">Decide Your Own Path — record your travels</div>
+    </div>
+    <div class="mh-name">
+      <label for="advName">Adventurer</label>
+      <input id="advName" type="text" placeholder="Name…" autocomplete="off">
+    </div>
+    <div class="io-row">
+      <a class="io-btn builder-link" href="character-builder-2.html" title="Open the Character Builder in a new tab">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Character Builder
+      </a>
+      <button class="io-btn" id="exportBtn" title="Download journal as JSON"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export</button>
+      <button class="io-btn" id="importBtn" title="Load journal from JSON"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>Import</button>
+      <button class="io-btn" id="printBtn" title="Print journal"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
+      <input id="fileInput" type="file" accept="application/json,.json" style="display:none">
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <nav class="cats" id="cats"></nav>
+    <p class="sec-intro" id="secIntro"></p>
+    <div id="list"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const LS = "dyop_journal_v1";
+const $ = id => document.getElementById(id);
+const uid = () => Math.random().toString(36).slice(2,9);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const ORDER = ["location","npc","quest","general"];
+const TYPES = {
+  location:{ singular:"place", plural:"Locations", primary:"name",
+    intro:"Villages, cities and regions you've passed through.",
+    blank:{name:"",kind:"",desc:""},
+    fields:[
+      {k:"name", label:"Name",        el:"input", ph:"e.g. Rivenmoor"},
+      {k:"kind", label:"Type",        el:"input", ph:"Village · Town · City · Region · Landmark…"},
+      {k:"desc", label:"Description", el:"area",  ph:"What stands out — sights, who rules it, dangers, rumours…"}
+    ],
+    card:n=>({title:n.name||"Untitled place", meta:n.kind||"", body:n.desc||""}) },
+  npc:{ singular:"NPC", plural:"NPCs", primary:"name",
+    intro:"People you've met along the way.",
+    blank:{name:"",city:"",desc:""},
+    fields:[
+      {k:"name", label:"Who they are", el:"input", ph:"e.g. Maerin, the harbour innkeeper"},
+      {k:"city", label:"Met at",       el:"input", ph:"City or place where you met"},
+      {k:"desc", label:"Notes",        el:"area",  ph:"Appearance, temperament, what they wanted, how they can help…"}
+    ],
+    card:n=>({title:n.name||"Unknown figure", meta:n.city?`met at ${n.city}`:"", body:n.desc||""}) },
+  quest:{ singular:"quest", plural:"Quests", primary:"objective",
+    intro:"Tasks taken on, and who set them.",
+    blank:{giver:"",objective:"",notes:"",done:false},
+    fields:[
+      {k:"giver",     label:"Given by",  el:"input", ph:"NPC who gave the quest"},
+      {k:"objective", label:"Objective", el:"input", ph:"e.g. Recover the stolen ledger"},
+      {k:"notes",     label:"Notes",     el:"area",  ph:"Leads, conditions, deadlines, promised reward…"}
+    ],
+    card:n=>({title:n.objective||"Untitled quest", meta:n.giver?`from ${n.giver}`:"", body:n.notes||""}) },
+  general:{ singular:"note", plural:"General", primary:"text",
+    intro:"Anything else worth remembering.",
+    blank:{title:"",text:""},
+    fields:[
+      {k:"title", label:"Title", el:"input", ph:"Optional — e.g. The Prophecy of Ash"},
+      {k:"text",  label:"Note",  el:"area",  ph:"Lore, clues, ideas, loose threads…"}
+    ],
+    card:n=>({title:n.title||"", meta:"", body:n.text||""}) }
+};
+
+const blank = () => ({name:"", location:[], npc:[], quest:[], general:[]});
+let J = blank();
+let cat = "location";
+let draft = null, draftId = null;
+let pendingDel = null;
+
+function load(){
+  try{ const r = localStorage.getItem(LS); if(r) Object.assign(J, JSON.parse(r)); }catch(e){}
+  ORDER.forEach(c=>{ if(!Array.isArray(J[c])) J[c]=[]; });
+  if(typeof J.name!=="string") J.name="";
+}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(J)); }catch(e){} }
+
+let toastT;
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1900); }
+
+/* ---- actions ---- */
+function setCat(c){ if(cat===c) return; cat=c; draft=null; draftId=null; pendingDel=null; render(); }
+function newEntry(){ pendingDel=null; draft={id:uid(), ...JSON.parse(JSON.stringify(TYPES[cat].blank))}; draftId=null; render(); }
+function editEntry(id){ pendingDel=null; const n=J[cat].find(x=>x.id===id); if(!n) return; draft=JSON.parse(JSON.stringify(n)); draftId=id; render(); }
+function cancelEntry(){ draft=null; draftId=null; render(); }
+function setField(k,v){ if(draft) draft[k]=v; }
+function saveEntry(){
+  if(!draft) return;
+  const t=TYPES[cat];
+  const hasContent = cat==="general"
+    ? String(draft.title||"").trim() || String(draft.text||"").trim()
+    : String(draft[t.primary]||"").trim();
+  if(!hasContent){ toast(cat==="general" ? "Add a title or a note first" : `Add a ${t.fields[0].label.toLowerCase()} first`); return; }
+  const arr=J[cat];
+  if(draftId){ const i=arr.findIndex(x=>x.id===draftId); if(i>=0) arr[i]=draft; else arr.push(draft); }
+  else arr.push(draft);
+  draft=null; draftId=null; save(); render();
+  toast(`${t.singular[0].toUpperCase()+t.singular.slice(1)} saved`);
+}
+function askRemove(id){ pendingDel=id; render(); }
+function cancelRemove(){ pendingDel=null; render(); }
+function removeEntry(id){
+  const arr=J[cat]; const i=arr.findIndex(x=>x.id===id); if(i>=0) arr.splice(i,1);
+  if(draftId===id){ draft=null; draftId=null; }
+  pendingDel=null; save(); render(); toast("Removed");
+}
+function toggleDone(id){ pendingDel=null; const n=J.quest.find(x=>x.id===id); if(!n) return; n.done=!n.done; save(); render(); }
+
+/* ---- render ---- */
+function editorHTML(){
+  const t=TYPES[cat], it=draft;
+  let H=`<div class="editor"><div class="etitle">${draftId?`Edit ${t.singular}`:`New ${t.singular}`}</div>`;
+  for(const f of t.fields){
+    H+=`<label class="field"><span class="flabel">${f.label}</span>`;
+    H+= f.el==="area"
+      ? `<textarea class="jin jarea" rows="4" placeholder="${esc(f.ph)}" data-field="${f.k}">${esc(it[f.k]||"")}</textarea>`
+      : `<input class="jin" type="text" placeholder="${esc(f.ph)}" value="${esc(it[f.k]||"")}" data-field="${f.k}">`;
+    H+=`</label>`;
+  }
+  H+=`<div class="save-row"><button class="add-btn" data-save="1">Save ${t.singular}</button><button class="rm-btn" data-cancel="1">Cancel</button></div></div>`;
+  return H;
+}
+function cardHTML(c, n){
+  const t=TYPES[c], v=t.card(n), done = c==="quest" && n.done;
+  const title = v.title ? `<span class="cname">${esc(v.title)}</span>` : `<span class="cname general">Note</span>`;
+  const meta = v.meta ? `<span class="cmeta">${linkify(v.meta)}</span>` : "";
+  const body = v.body ? `<div class="cbody">${linkify(v.body)}</div>` : "";
+  const doneBtn = c==="quest" ? `<button class="pill-btn done-btn${done?' on':''}" data-done="${n.id}">${done?'✓ Completed':'Mark done'}</button>` : "";
+  const btns = pendingDel===n.id
+    ? `<span class="del-ask">Remove this ${TYPES[c].singular}?</span><button class="pill-btn warn" data-delyes="${n.id}">Yes, remove</button><button class="pill-btn" data-delno="1">Cancel</button>`
+    : `${doneBtn}<button class="pill-btn" data-edit="${n.id}">Edit</button><button class="pill-btn warn" data-del="${n.id}">Remove</button>`;
+  return `<div class="jcard${done?' done-card':''}${pendingDel===n.id?' del-pending':''}" id="entry-${n.id}">
+    <div class="chead">${title}${meta}</div>
+    ${body}
+    <div class="cbtns">${btns}</div>
+  </div>`;
+}
+function render(){
+  // pills
+  $("cats").innerHTML = ORDER.map(c=>
+    `<button class="cat${cat===c?' on':''}" data-cat="${c}">${TYPES[c].plural}<span class="count">${J[c].length}</span></button>`
+  ).join("");
+  $("secIntro").textContent = TYPES[cat].intro;
+
+  const t=TYPES[cat], arr=J[cat];
+  const visible = arr.filter(n=>!(draftId && n.id===draftId));
+  let H="";
+  if(visible.length) H+=visible.map(n=>cardHTML(cat,n)).join("");
+  else if(!draft) H+=`<div class="empty">No ${t.plural.toLowerCase()} recorded yet.</div>`;
+  if(draft) H+=editorHTML();
+  else H+=`<button class="add-btn sm" data-new="1" style="margin-top:4px">✦ New ${t.singular}</button>`;
+  $("list").innerHTML=H;
+  hideTip(); acHide();
+}
+
+/* ---- @mention engine ---- */
+const TYPE_LABEL = {location:"Location", npc:"NPC", quest:"Quest", general:"Note"};
+// buildable index: every titled entry (Locations, NPCs, Quests), longest titles first for greedy matching
+function mentionIndex(){
+  const idx=[];
+  ORDER.forEach(c=>{
+    J[c].forEach(n=>{ const title=TYPES[c].card(n).title; if(title && title.trim()) idx.push({id:n.id, cat:c, title:title.trim()}); });
+  });
+  idx.sort((a,b)=>b.title.length-a.title.length);
+  return idx;
+}
+function entryById(id){ for(const c of ORDER){ const n=J[c].find(x=>x.id===id); if(n) return {cat:c, n}; } return null; }
+function mentionAnchor(e){ return `<a class="mention" data-goto="${e.cat}|${e.id}">@${esc(e.title)}</a>`; }
+// turn raw text into safe HTML, converting @Name / @[Name with spaces] into links
+function linkify(text){
+  const idx=mentionIndex();
+  let out="", i=0, len=text.length;
+  while(i<len){
+    if(text[i]==="@"){
+      // explicit @[Name] form (handles spaces / disambiguation)
+      if(text[i+1]==="["){
+        const close=text.indexOf("]", i+2);
+        if(close>-1){
+          const name=text.slice(i+2, close).trim();
+          const hit=idx.find(e=>e.title.toLowerCase()===name.toLowerCase());
+          if(hit){ out+=mentionAnchor(hit); i=close+1; continue; }
+        }
+      }
+      // bare @Name form — greedy longest known title
+      const rest=text.slice(i+1), restL=rest.toLowerCase();
+      let hit=null;
+      for(const e of idx){
+        const tl=e.title.toLowerCase();
+        if(restL.startsWith(tl)){
+          const after=rest[e.title.length];
+          if(after===undefined || !/[A-Za-z0-9]/.test(after)){ hit=e; break; }
+        }
+      }
+      if(hit){ out+=mentionAnchor(hit); i+=1+hit.title.length; continue; }
+    }
+    out+=esc(text[i]); i++;
+  }
+  return out;
+}
+function gotoEntry(c, id){
+  hideTip(); acHide();
+  if(cat!==c){ cat=c; draft=null; draftId=null; render(); }
+  requestAnimationFrame(()=>{
+    const card=document.getElementById("entry-"+id);
+    if(card){ card.scrollIntoView({behavior:"smooth", block:"center"}); card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash"); }
+  });
+}
+
+/* tooltip */
+let tipEl=null;
+function ensureTip(){ if(!tipEl){ tipEl=document.createElement("div"); tipEl.className="m-tip"; document.body.appendChild(tipEl); } return tipEl; }
+function showTip(anchor){
+  const goto=anchor.dataset.goto; if(!goto) return;
+  const [,id]=goto.split("|"); const ref=entryById(id); if(!ref) return;
+  const {cat:c, n}=ref, v=TYPES[c].card(n);
+  const tip=ensureTip();
+  const snippet=(v.body||"").trim(); const short = snippet.length>160 ? snippet.slice(0,160).trimEnd()+"…" : snippet;
+  tip.innerHTML = `<div class="tt-type">${TYPE_LABEL[c]}</div><div class="tt-title">${esc(v.title||"—")}</div>`
+    + (v.meta?`<div class="tt-meta">${esc(v.meta)}</div>`:"")
+    + (short?`<div class="tt-body">${esc(short)}</div>`:"")
+    + (c==="quest"&&n.done?`<div class="tt-done">✓ Completed</div>`:"");
+  const r=anchor.getBoundingClientRect();
+  tip.classList.add("show");
+  const tw=tip.offsetWidth, th=tip.offsetHeight, pad=8;
+  let left=Math.min(Math.max(pad, r.left), window.innerWidth-tw-pad);
+  let top=r.top-th-8; if(top<pad) top=r.bottom+8;   // flip below if no room above
+  tip.style.left=left+"px"; tip.style.top=top+"px";
+}
+function hideTip(){ if(tipEl) tipEl.classList.remove("show"); }
+
+/* autocomplete */
+let acEl=null, ac={open:false, field:null, atPos:0, items:[], sel:0};
+function ensureAc(){ if(!acEl){ acEl=document.createElement("div"); acEl.className="ac"; acEl.style.display="none"; document.body.appendChild(acEl);
+  acEl.addEventListener("mousedown", e=>{ const it=e.target.closest("[data-acpick]"); if(it){ e.preventDefault(); acChoose(+it.dataset.acpick); } });
+} return acEl; }
+function acHide(){ ac.open=false; ac.field=null; if(acEl) acEl.style.display="none"; }
+function acRenderList(){
+  const box=ensureAc();
+  if(!ac.items.length){ box.innerHTML=`<div class="ac-hint">No matching entry — keep typing to create the name, then add that entry.</div>`; return; }
+  box.innerHTML=ac.items.map((e,i)=>`<div class="ac-item${i===ac.sel?' on':''}" data-acpick="${i}"><span class="ai-type">${TYPE_LABEL[e.cat]}</span><span class="ai-title">${esc(e.title)}</span></div>`).join("");
+}
+function acUpdate(el){
+  if(!el || (el.tagName!=="TEXTAREA" && !(el.tagName==="INPUT"&&el.type==="text"))){ acHide(); return; }
+  const caret=el.selectionStart, val=el.value;
+  // find the @ that starts the current token (same line, boundary before it)
+  let p=caret-1, at=-1;
+  while(p>=0){ const ch=val[p]; if(ch==="\n") break; if(ch==="@"){ const prev=val[p-1]; if(p===0 || /\s/.test(prev)) at=p; break; } p--; }
+  if(at===-1){ acHide(); return; }
+  const query=val.slice(at+1, caret);
+  if(query.length>40){ acHide(); return; }
+  const ql=query.toLowerCase();
+  const items=mentionIndex().filter(e=>e.title.toLowerCase().includes(ql)).slice(0,8);
+  if(!query && !items.length){ acHide(); return; }
+  ac.open=true; ac.field=el; ac.atPos=at; ac.items=items; ac.sel=0;
+  const box=ensureAc(); box.style.display="block"; acRenderList();
+  const r=el.getBoundingClientRect(); const bw=box.offsetWidth, bh=box.offsetHeight, pad=8;
+  let left=Math.min(Math.max(pad, r.left), window.innerWidth-bw-pad);
+  let top=r.bottom+4; if(top+bh>window.innerHeight-pad) top=Math.max(pad, r.top-bh-4);
+  box.style.left=left+"px"; box.style.top=top+"px";
+}
+function acChoose(i){
+  const e=ac.items[i]; const el=ac.field; if(!e||!el) return;
+  const val=el.value, before=val.slice(0, ac.atPos), after=val.slice(el.selectionStart);
+  const insert="@"+e.title+" ";
+  const newVal=before+insert+after; el.value=newVal;
+  const caret=(before+insert).length; el.setSelectionRange(caret, caret);
+  setField(el.dataset.field, newVal);
+  acHide(); el.focus();
+}
+
+/* ---- export / import / print ---- */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(J,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  const slug=(J.name||"journal").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"journal";
+  a.href=URL.createObjectURL(blob); a.download=`${slug}-journal.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+  toast("Journal exported");
+}
+function importJSON(file){
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const data=JSON.parse(rd.result);
+    J=blank(); Object.assign(J,data);
+    ORDER.forEach(c=>{ if(!Array.isArray(J[c])) J[c]=[]; });
+    if(typeof J.name!=="string") J.name="";
+    draft=null; draftId=null; $("advName").value=J.name;
+    save(); render(); toast("Journal loaded");
+  }catch(e){ toast("Could not read that file"); } };
+  rd.readAsText(file);
+}
+
+/* ---- wiring ---- */
+$("advName").addEventListener("input", e=>{ J.name=e.target.value; save(); });
+$("cats").addEventListener("click", e=>{ const b=e.target.closest("[data-cat]"); if(b) setCat(b.dataset.cat); });
+$("list").addEventListener("click", e=>{
+  const go=e.target.closest("[data-goto]"); if(go){ e.preventDefault(); const [c,id]=go.dataset.goto.split("|"); return gotoEntry(c,id); }
+  if(e.target.closest("[data-new]"))    return newEntry();
+  if(e.target.closest("[data-save]"))   return saveEntry();
+  if(e.target.closest("[data-cancel]")) return cancelEntry();
+  const ed=e.target.closest("[data-edit]"); if(ed) return editEntry(ed.dataset.edit);
+  const dl=e.target.closest("[data-del]");  if(dl) return askRemove(dl.dataset.del);
+  const dy=e.target.closest("[data-delyes]"); if(dy) return removeEntry(dy.dataset.delyes);
+  if(e.target.closest("[data-delno]")) return cancelRemove();
+  const dn=e.target.closest("[data-done]"); if(dn) return toggleDone(dn.dataset.done);
+});
+$("list").addEventListener("input", e=>{ const f=e.target.closest("[data-field]"); if(f){ setField(f.dataset.field, e.target.value); acUpdate(f); } });
+$("list").addEventListener("keydown", e=>{
+  if(!ac.open) return;
+  if(e.key==="ArrowDown"){ e.preventDefault(); ac.sel=(ac.sel+1)%Math.max(1,ac.items.length); acRenderList(); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); ac.sel=(ac.sel-1+ac.items.length)%Math.max(1,ac.items.length); acRenderList(); }
+  else if((e.key==="Enter"||e.key==="Tab") && ac.items.length){ e.preventDefault(); acChoose(ac.sel); }
+  else if(e.key==="Escape"){ e.preventDefault(); acHide(); }
+});
+$("list").addEventListener("focusout", e=>{ if(e.target.closest("[data-field]")) setTimeout(acHide, 120); });
+// hover tooltips on mentions
+$("list").addEventListener("mouseover", e=>{ const m=e.target.closest(".mention"); if(m) showTip(m); });
+$("list").addEventListener("mouseout",  e=>{ const m=e.target.closest(".mention"); if(m) hideTip(); });
+window.addEventListener("scroll", ()=>{ hideTip(); acHide(); }, true);
+window.addEventListener("resize", ()=>{ hideTip(); acHide(); });
+$("exportBtn").addEventListener("click", exportJSON);
+$("importBtn").addEventListener("click", ()=>$("fileInput").click());
+$("fileInput").addEventListener("change", e=>{ if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value=""; });
+$("printBtn").addEventListener("click", ()=>window.print());
+
+/* ---- init ---- */
+load();
+$("advName").value=J.name;
+render();
+</script>
+</body>
+</html>

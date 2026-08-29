@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Loom — DM Forge & Codex · Decide Your Own Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161f; --panel:#1b1e28; --raised:#232734; --line:#30354598;
+  --line-solid:#303545; --ink:#d8d3c3; --bone:#ece6d6; --muted:#8a8fa0;
+  --verd:#6cc0a1; --verd-deep:#3f8f75; --violet:#a596e0; --rust:#dd6b57;
+  --gold:#d3b483; --shadow:0 1px 0 #ffffff08, 0 8px 24px -12px #000000aa;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Spectral",Georgia,serif; font-size:16px; line-height:1.55;
+  background-image:radial-gradient(1200px 600px at 80% -10%, #1e2a2833 0, transparent 60%),
+                   radial-gradient(900px 500px at -10% 110%, #241f2e40 0, transparent 60%);
+}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IM Fell English",Georgia,serif; text-transform:uppercase; letter-spacing:.22em; font-size:.68rem; color:var(--verd); font-style:normal}
+h1,h2,h3{font-family:"IM Fell English",Georgia,serif; font-weight:400; color:var(--bone); margin:0}
+a{color:var(--verd)}
+button{font-family:inherit; cursor:pointer}
+input,select,textarea{font-family:inherit}
+
+/* Masthead */
+.masthead{position:sticky; top:0; z-index:50; background:#14161fee; backdrop-filter:blur(10px); border-bottom:1px solid var(--line-solid)}
+.masthead-inner{max-width:1080px; margin:0 auto; padding:11px 20px; display:flex; gap:18px; align-items:center; flex-wrap:wrap}
+.brand{display:flex; flex-direction:column; line-height:1}
+.brand .title{font-family:"IM Fell English",serif; font-size:1.15rem; color:var(--bone); letter-spacing:.02em}
+.brand .sub{font-size:.66rem; color:var(--muted); font-style:italic; margin-top:3px}
+.switch{display:flex; border:1px solid var(--line-solid); border-radius:9px; overflow:hidden}
+.vtab{background:transparent; border:none; color:var(--muted); font-family:"IM Fell English",serif; font-size:.94rem; padding:8px 16px; display:inline-flex; align-items:center; gap:8px; transition:.12s}
+.vtab.on{background:var(--raised); color:var(--bone)}
+.vtab:not(.on):hover{color:var(--ink)}
+.vtab .vc{font-family:"JetBrains Mono",monospace; font-size:.66rem; color:var(--verd); background:#0f111a; border:1px solid var(--line-solid); border-radius:20px; padding:1px 7px}
+.mh-actions{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap}
+.mh-btn{background:var(--raised); border:1px solid var(--line-solid); color:var(--ink); border-radius:8px; padding:8px 12px; font-size:.78rem; display:inline-flex; align-items:center; gap:7px; transition:.12s}
+.mh-btn:hover{border-color:var(--verd); color:var(--bone)}
+.mh-btn svg{width:14px; height:14px}
+.mh-btn.danger:hover{border-color:var(--rust); color:var(--rust)}
+
+/* Layout */
+.wrap{max-width:1080px; margin:0 auto; padding:26px 20px 90px}
+
+/* Step label */
+.step{display:flex; align-items:baseline; gap:12px; margin:0 2px 14px}
+.step .n{font-family:"JetBrains Mono",monospace; font-size:.7rem; color:var(--gold); border:1px solid var(--line-solid); border-radius:20px; padding:3px 9px; letter-spacing:.08em}
+.step h2{font-size:1.35rem}
+.step .hint{font-size:.76rem; color:var(--muted); font-style:italic}
+
+/* ---------- FORGE: type picker ---------- */
+.picker{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:30px}
+@media(max-width:720px){ .picker{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:440px){ .picker{grid-template-columns:1fr} }
+.ptile{position:relative; text-align:left; background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; padding:16px 16px 15px; transition:.14s; box-shadow:var(--shadow); overflow:hidden}
+.ptile:hover{border-color:var(--verd-deep); transform:translateY(-1px)}
+.ptile.on{border-color:var(--verd); box-shadow:inset 0 0 0 1px var(--verd-deep), var(--shadow)}
+.ptile.on::before{content:""; position:absolute; inset:0; background:radial-gradient(120px 60px at 90% -10%, #6cc0a122 0, transparent 70%); pointer-events:none}
+.ptile .ico{width:26px; height:26px; color:var(--verd); margin-bottom:9px; display:block}
+.ptile.on .ico{color:var(--gold)}
+.ptile .pt-name{font-family:"IM Fell English",serif; font-size:1.14rem; color:var(--bone); letter-spacing:.01em}
+.ptile .pt-sub{font-size:.74rem; color:var(--muted); margin-top:3px; line-height:1.4}
+.ptile .pt-scope{position:absolute; top:13px; right:13px; font-size:.55rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-family:"JetBrains Mono",monospace; border:1px solid var(--line-solid); border-radius:20px; padding:2px 7px}
+
+/* Card / fields */
+.card{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; box-shadow:var(--shadow); margin-bottom:22px}
+.card-head{padding:16px 18px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.card-head h3{font-size:1.3rem}
+.card-head .hint{font-size:.75rem; color:var(--muted); font-style:italic; max-width:56ch}
+.card-body{padding:15px 18px 20px}
+.fields{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.field{display:flex; flex-direction:column; gap:5px}
+.field.full{grid-column:1 / -1}
+.field label,.flabel{font-size:.62rem; text-transform:uppercase; letter-spacing:.14em; color:var(--muted)}
+.field .fx{font-size:.66rem; color:var(--muted); font-style:italic; text-transform:none; letter-spacing:0}
+.field input,.field select,.field textarea,.jin{
+  background:var(--raised); border:1px solid var(--line-solid); color:var(--bone);
+  border-radius:7px; padding:9px 11px; font-size:.92rem; width:100%;
+}
+.field textarea{resize:vertical; min-height:64px; line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus,.jin:focus{outline:2px solid var(--verd-deep); outline-offset:0}
+.field select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a8fa0' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center; padding-right:28px}
+.ctx-field textarea{min-height:52px}
+
+/* Forge preview + actions */
+.forge{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; box-shadow:var(--shadow)}
+.forge-head{padding:15px 18px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.forge-head .eyebrow{color:var(--violet)}
+.forge-body{padding:13px 18px 20px}
+.fmt-toggle{display:flex; border:1px solid var(--line-solid); border-radius:8px; overflow:hidden}
+.fmt-toggle button{background:transparent; border:none; color:var(--muted); font-size:.72rem; padding:6px 11px; transition:.12s}
+.fmt-toggle button.on{background:var(--raised); color:var(--bone)}
+.fmt-toggle button:not(.on):hover{color:var(--ink)}
+.prompt-box{background:#0f111a; border:1px solid var(--line-solid); border-radius:11px; padding:15px 16px; font-family:"JetBrains Mono",monospace; font-size:.78rem; line-height:1.62; color:var(--ink); white-space:pre-wrap; word-break:break-word; max-height:40vh; overflow:auto}
+.prompt-box .p-h{color:var(--verd); font-weight:700}
+.prompt-box .p-tag{color:var(--gold)}
+.prompt-box .p-mut{color:var(--muted); font-style:italic}
+.actions{display:flex; gap:11px; margin-top:15px; flex-wrap:wrap}
+.act{flex:1; min-width:170px; border:1px solid var(--line-solid); border-radius:10px; padding:13px 16px; font-size:.9rem; display:inline-flex; align-items:center; justify-content:center; gap:9px; transition:.14s; text-decoration:none; color:var(--ink)}
+.act svg{width:17px; height:17px; flex-shrink:0}
+.act.copy{background:var(--raised)}
+.act.copy:hover{border-color:var(--verd); color:var(--bone)}
+.act.mcclaude{background:linear-gradient(135deg,#3a3350,#2a2740); border-color:#6b5fa0; color:#efe9ff; font-family:"IM Fell English",serif; font-size:1.0rem}
+.act.mcclaude:hover{border-color:var(--violet); box-shadow:0 0 0 1px var(--violet), 0 8px 20px -10px #6b5fa0aa}
+.act.mcclaude .halo{color:var(--gold)}
+.act.tocodex{background:var(--raised)}
+.act.tocodex:hover{border-color:var(--gold); color:var(--bone)}
+.act-note{font-size:.72rem; color:var(--muted); font-style:italic; margin-top:11px; line-height:1.5}
+.act-note b{color:var(--gold); font-style:normal}
+
+/* Empty */
+.empty{background:var(--panel); border:1px dashed var(--line-solid); border-radius:12px; padding:40px 24px; text-align:center; color:var(--muted)}
+.empty .em-ico{width:34px; height:34px; color:var(--verd-deep); margin:0 auto 12px; display:block}
+.empty h3{font-size:1.2rem; color:var(--bone); margin-bottom:6px}
+.empty p{font-size:.86rem; font-style:italic; max-width:46ch; margin:0 auto}
+
+/* ---------- CODEX ---------- */
+.sec-intro{font-size:.82rem; color:var(--muted); font-style:italic; margin:0 2px 16px; max-width:70ch; line-height:1.5}
+.cats{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px}
+.cat{display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:20px; border:1px solid var(--line-solid); background:transparent; color:var(--muted); font-size:.8rem; transition:.12s}
+.cat:hover{color:var(--ink); border-color:var(--verd-deep)}
+.cat.on{background:var(--raised); color:var(--bone); border-color:var(--verd)}
+.cat .count{font-family:"JetBrains Mono",monospace; font-size:.66rem; color:var(--verd)}
+.add-btn{background:transparent; border:1px dashed var(--verd-deep); color:var(--verd); border-radius:9px; padding:11px 14px; font-size:.88rem; transition:.12s; display:inline-flex; align-items:center; gap:8px}
+.add-btn:hover{background:#1c2622; color:var(--bone)}
+.add-row{margin-bottom:18px}
+
+.editor{background:var(--panel); border:1px solid var(--verd-deep); border-radius:12px; box-shadow:var(--shadow); padding:16px 18px 18px; margin-bottom:20px}
+.editor .etitle{font-size:1.2rem; margin-bottom:12px}
+.editor .field{margin-bottom:12px}
+.jarea{min-height:150px; resize:vertical; line-height:1.55}
+.save-row{display:flex; gap:10px; margin-top:6px; flex-wrap:wrap}
+.pill-btn{border:1px solid var(--line-solid); background:var(--raised); color:var(--ink); border-radius:8px; padding:9px 16px; font-size:.86rem; transition:.12s}
+.pill-btn:hover{border-color:var(--verd); color:var(--bone)}
+.pill-btn.primary{background:var(--verd-deep); border-color:var(--verd); color:#eafff6}
+.pill-btn.primary:hover{background:#4a9d82}
+.pill-btn.warn:hover{border-color:var(--rust); color:var(--rust)}
+
+.cx-list{display:flex; flex-direction:column; gap:12px}
+.cx-card{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; box-shadow:var(--shadow); padding:15px 17px}
+.cx-card.flash{animation:flashRing 1.6s ease}
+@keyframes flashRing{0%,100%{box-shadow:var(--shadow)}12%{box-shadow:0 0 0 2px var(--verd), var(--shadow)}}
+.cx-top{display:flex; align-items:baseline; gap:10px; justify-content:space-between; flex-wrap:wrap}
+.cx-tag{font-size:.55rem; text-transform:uppercase; letter-spacing:.13em; color:var(--verd); font-family:"JetBrains Mono",monospace; border:1px solid var(--verd-deep); border-radius:20px; padding:2px 8px}
+.cx-title{font-size:1.24rem; color:var(--bone); flex:1; min-width:0}
+.cx-meta{font-size:.78rem; color:var(--gold); font-style:italic; margin-top:2px}
+.cx-body{margin-top:9px; font-size:.9rem; color:var(--ink); white-space:pre-wrap; line-height:1.58}
+.cx-body.clamp{display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden}
+.cx-more{background:none; border:none; color:var(--verd); font-size:.76rem; padding:6px 0 0; font-style:italic}
+.cx-btns{display:flex; gap:8px; margin-top:12px}
+.icon-btn{background:var(--raised); border:1px solid var(--line-solid); color:var(--muted); border-radius:7px; padding:6px 12px; font-size:.76rem; transition:.12s}
+.icon-btn:hover{border-color:var(--verd); color:var(--bone)}
+.icon-btn.warn:hover{border-color:var(--rust); color:var(--rust)}
+.del-ask{font-size:.76rem; color:var(--rust); font-style:italic; display:inline-flex; align-items:center; gap:8px}
+.del-ask button{border:1px solid var(--rust); background:transparent; color:var(--rust); border-radius:6px; padding:4px 10px; font-size:.74rem}
+.del-ask button.no{border-color:var(--line-solid); color:var(--muted)}
+
+/* @mentions */
+.mention{color:var(--verd); text-decoration:none; border-bottom:1px dashed var(--verd-deep); cursor:pointer; font-weight:600}
+.mention:hover{color:var(--bone); border-bottom-color:var(--verd)}
+.m-tip{position:fixed; z-index:200; max-width:290px; background:var(--panel); border:1px solid var(--verd-deep); border-radius:10px; box-shadow:var(--shadow); padding:11px 13px; opacity:0; pointer-events:none; transition:opacity .12s}
+.m-tip.show{opacity:1}
+.tt-type{font-size:.56rem; text-transform:uppercase; letter-spacing:.14em; color:var(--verd); margin-bottom:3px; font-family:"JetBrains Mono",monospace}
+.tt-title{font-family:"IM Fell English",serif; font-size:1.02rem; color:var(--bone)}
+.tt-meta{font-size:.74rem; color:var(--gold); font-style:italic; margin-top:2px}
+.tt-body{font-size:.78rem; color:var(--muted); margin-top:6px; line-height:1.5}
+.ac{position:fixed; z-index:210; background:var(--panel); border:1px solid var(--verd-deep); border-radius:10px; box-shadow:var(--shadow); padding:5px; min-width:210px; max-width:320px}
+.ac-item{display:flex; align-items:baseline; gap:9px; padding:7px 9px; border-radius:7px; cursor:pointer}
+.ac-item.on,.ac-item:hover{background:var(--verd-deep)}
+.ai-type{font-size:.54rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-family:"JetBrains Mono",monospace; flex:0 0 auto; padding-top:2px}
+.ac-item.on .ai-type{color:#cdeee2}
+.ai-title{font-size:.86rem; color:var(--bone)}
+.ac-hint{padding:6px 9px; font-size:.68rem; color:var(--muted); font-style:italic}
+.ref-hint{font-size:.66rem; color:var(--muted); font-style:italic; margin-top:4px}
+.ref-hint b{color:var(--verd); font-style:normal; font-family:"JetBrains Mono",monospace}
+
+/* Toast */
+#toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--raised); border:1px solid var(--verd-deep); color:var(--bone); padding:11px 18px; border-radius:10px; font-size:.86rem; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:.22s; z-index:100; max-width:90vw; text-align:center}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--rust); color:#f2c4bb}
+
+@media(max-width:560px){ .fields{grid-template-columns:1fr} }
+@media print{
+  .masthead,.cats,.add-row,.cx-btns,.step .n,#toast,.editor{display:none !important}
+  body{background:#fff; color:#111}
+  .cx-card{border:1px solid #ccc; box-shadow:none; break-inside:avoid}
+  .cx-title,.cx-tag,.cx-meta,.cx-body{color:#111 !important}
+  .mention{color:#111; border:none; font-weight:700}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <span class="title">The Loom</span>
+      <span class="sub">Decide Your Own Path — a DM's forge & codex</span>
+    </div>
+    <div class="switch" id="switch"></div>
+    <div class="mh-actions" id="mhActions"></div>
+    <input type="file" id="fileImport" accept=".json" style="display:none">
+  </div>
+</header>
+
+<div class="wrap" id="wrap"></div>
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   The Loom — DM forge & codex
+   Forge: pick a subject -> choices -> Copy prompt / Ask McClaude.
+   Codex: register the content you get back, cross-linked with
+   @mentions (like the journal's reference function).
+   Single-file, offline, autosaves to localStorage.
+   ============================================================ */
+const LS = "dyop_dm_forge_v3";
+const LS_OLD = "dyop_dm_forge_v2";
+const CLAUDE_URL = "https://claude.ai/new?q=";
+const uid = () => Math.random().toString(36).slice(2,9);
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---- option lists ---- */
+const OPT = {
+  planes:["Single material world","Material + spirit echo","Material + heaven & hell","Layered vertical cosmos","Great-wheel multiverse","Shattered / drifting realms","Dreamlands over reality"],
+  divine:["Living polytheistic pantheon","Dualistic (order vs chaos)","Distant / silent gods","Dead or slain gods","Animist spirits, no gods","Ascended mortal gods","One hidden true god"],
+  magicSource:["Ambient weave anyone can touch","Granted by gods / spirits","Pacts with outer entities","Innate bloodlines","Rare, feared, forbidden","Bound into technology","Drawn from the dead / ruins"],
+  tone:["Mythic & wondrous","Balanced heroic","Grim & indifferent","Cosmic horror","Hopeful after ruin","Whimsical & strange"],
+  genre:["High fantasy","Sword & sorcery","Dark fantasy","Mythic ancient world","Fantasy + gunpowder","Magitech / arcanepunk","Post-cataclysm fantasy"],
+  tech:["Stone age","Bronze age","Iron / early medieval","High medieval","Renaissance","Early gunpowder","Magic-as-industry"],
+  conflict:["Empires on the brink of war","Cold peace, quiet scheming","Rebuilding after a cataclysm","A creeping corruption spreads","An age of exploration","Rebellion against a tyrant","A prophecy coming due"],
+  prevalence:["Ubiquitous — woven into daily life","Common — a known trade","Uncommon — respected & rare","Rare — whispered about","Feared & outlawed"],
+  terrain:["Rolling plains","Deep forest","Mountains & highlands","Desert / badlands","Coast & isles","Swamp & marsh","Frozen tundra","Volcanic / ashlands","Underground / caverns","River delta"],
+  climate:["Temperate","Arid","Tropical","Cold / subarctic","Storm-wracked","Unnaturally shifting"],
+  governance:["Feudal lords","Monarchy","Council / republic","Theocracy","Tribal / clan","Merchant guilds","Magocracy","Lawless frontier","Occupied territory"],
+  danger:["Safe & settled","Contested","Dangerous","Deadly wilds","Cursed"],
+  regionRole:["Heartland of the realm","Distant frontier","Contested borderland","Sacred / forbidden ground","Ruin of a fallen age","Site of the central conflict"],
+  citySize:["Hamlet","Village","Town","Small city","Great city","Metropolis","Ruined settlement"],
+  cityGov:["Ruled by a lord","Elected council","Merchant guilds","Temple authority","Criminal powers","Contested / no clear ruler","Under occupation"],
+  economy:["Farming & herding","Fishing & shipping","Mining & smithing","Trade crossroads","Arcane craft","Scholarship & lore","Vice & smuggling","Pilgrimage"],
+  npcRole:["Ruler / noble","Merchant","Soldier / captain","Priest / cultist","Scholar / sage","Criminal / spy","Artisan / laborer","Wanderer / outsider","Monster in disguise","Innkeep / commoner"],
+  disposition:["Ally","Neutral","Wary","Rival","Hidden enemy","Wildcard"],
+  questType:["Fetch / retrieve","Escort / deliver","Investigate a mystery","Clear a dungeon","Heist / infiltration","Political intrigue","Rescue","Hunt a monster","Defend against a threat","Uncover the truth"],
+  questTier:["Novice (lv 1-4)","Seasoned (lv 5-10)","Veteran (lv 11-16)","Legendary (lv 17+)"],
+  stakes:["Personal","Local (a town)","Regional","Realm-shaking","Cosmic"]
+};
+
+const ICONS = {
+  cosmology:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/><path d="M2 12h20"/><path d="M12 2c3 3 4.5 6 4.5 10S15 19 12 22c-3-3-4.5-6-4.5-10S9 5 12 2Z"/>',
+  world:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/>',
+  region:'<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>',
+  city:'<path d="M3 21h18"/><path d="M5 21V7l6-4v18"/><path d="M11 21V9l8 4v8"/>',
+  npc:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  quest:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>'
+};
+const SUBJECTS = [
+  {id:"cosmology", name:"Cosmology", sub:"The shape of reality — planes, gods, the source of magic.", scope:"Foundation"},
+  {id:"world",     name:"World",     sub:"The lived-in setting: its mood, peoples, and central conflict.", scope:"Foundation"},
+  {id:"region",    name:"Region",    sub:"A stretch of the map — terrain, rulers, and its troubles.", scope:"Place"},
+  {id:"city",      name:"City",      sub:"A settlement the party can walk into, with hooks and rumors.", scope:"Place"},
+  {id:"npc",       name:"NPC",       sub:"A face to meet — a want, a secret, a voice to play.", scope:"Person"},
+  {id:"quest",     name:"Quest",     sub:"A job with beats, a twist, stakes, and a reward.", scope:"Story"}
+];
+
+/* Codex categories: the six subjects + freeform Lore */
+const CX_CATS = ["cosmology","world","region","city","npc","quest","lore"];
+const CX_LABEL = {cosmology:"Cosmology", world:"World", region:"Region", city:"City", npc:"NPC", quest:"Quest", lore:"Lore"};
+const CX_TITLE_LABEL = {cosmology:"Name", world:"Name", region:"Name", city:"Name", npc:"Name", quest:"Title", lore:"Title"};
+const CX_META_PH = {
+  cosmology:"one-line summary — tone, structure…", world:"one-line summary — genre, the age…",
+  region:"terrain · who rules · danger", city:"size · in which region · government",
+  npc:"role · where they are · disposition", quest:"type · tier · giver", lore:"optional one-line summary"
+};
+
+function blank(){
+  return {
+    view:"forge",
+    type:"", format:"detailed", context:"",
+    d:{
+      cosmology:{planes:"",divine:"",magicSource:"",tone:"",afterlife:"",mythSeed:""},
+      world:{name:"",genre:"",tech:"",prevalence:"",conflict:"",species:"",pitch:""},
+      region:{name:"",role:"",terrain:"",climate:"",governance:"",danger:"",feature:""},
+      city:{name:"",size:"",government:"",economy:"",landmark:"",tension:""},
+      npc:{name:"",role:"",disposition:"",goal:"",secret:"",quirk:""},
+      quest:{title:"",qtype:"",tier:"",stakes:"",giver:"",twist:"",reward:""}
+    },
+    codex:{ cat:"all", entries:[] }
+  };
+}
+let S = blank();
+let draft=null, draftId=null, pendingDel=null, expanded={};
+
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    let raw=localStorage.getItem(LS);
+    if(raw){ hydrate(JSON.parse(raw)); return; }
+    // migrate forge-only v2
+    let old=localStorage.getItem(LS_OLD);
+    if(old){ const p=JSON.parse(old); const b=blank(); Object.assign(b,p); b.d=mergeD(p.d); b.view="forge"; b.codex={cat:"all",entries:[]}; S=b; }
+  }catch(e){}
+}
+function mergeD(pd){ const bd=blank().d; const out=Object.assign(bd, pd||{}); for(const k in blank().d){ out[k]=Object.assign(blank().d[k], (pd||{})[k]||{}); } return out; }
+function hydrate(p){
+  const b=blank(); S=Object.assign(b,p);
+  S.d=mergeD(p.d);
+  S.codex=Object.assign({cat:"all",entries:[]}, p.codex||{});
+  S.codex.entries=Array.isArray(S.codex.entries)?S.codex.entries:[];
+}
+
+/* ---- clipboard / toast ---- */
+async function copy(text, ok){
+  try{ await navigator.clipboard.writeText(text); toast(ok||"Copied"); return; }catch(e){}
+  try{ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); toast(ok||"Copied"); }
+  catch(e){ toast("Couldn't copy — select the text manually","err"); }
+}
+let toastT=null;
+function toast(msg,kind){ const el=$("toast"); el.textContent=msg; el.className=kind==="err"?"err show":"show"; clearTimeout(toastT); toastT=setTimeout(()=>{ el.className=el.className.replace("show","").trim(); },2600); }
+
+/* ============================================================
+   FORGE — prompt building
+   ============================================================ */
+function fmtLen(){
+  return S.format==="brief" ? "Keep it tight and usable at the table — a few short paragraphs."
+    : S.format==="deep" ? "Go deep: full detail plus hooks, secrets, and threads I can pull on later."
+    : "Give a rich, table-ready writeup with concrete, evocative detail.";
+}
+function pushContext(L){ if(S.context&&S.context.trim()){ L.push("[SETTING SO FAR]"); S.context.trim().split(/\n+/).forEach(x=>L.push("· "+x.trim())); L.push(""); } }
+function rowsB(L, pairs){ const any=pairs.some(p=>p[1]&&String(p[1]).trim()); L.push("[CHOICES]"); pairs.forEach(([k,v])=>{ if(v&&String(v).trim()) L.push(`· ${k}: ${v}`); }); if(!any) L.push("· (open — surprise me, but keep it coherent with the setting)"); L.push(""); }
+function deliver(L, items){ L.push("[DELIVER]"); items.forEach(i=>L.push("· "+i)); L.push(""); }
+
+const BUILD = {
+  cosmology(){ const c=S.d.cosmology,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push("Design the COSMOLOGY — the foundational shape of reality — for my setting.");
+    L.push(""); pushContext(L);
+    rowsB(L,[["Cosmic structure",c.planes],["The divine",c.divine],["Source of magic",c.magicSource],["Overall tone",c.tone],["Afterlife",c.afterlife],["Creation-myth seed",c.mythSeed]]);
+    deliver(L,["A creation myth and the shape of the cosmos (realms and how they relate).","How the divine works, and how magic flows from its source into the world.","What happens to the dead.","3 cosmic mysteries or tensions I can build a campaign around."]);
+    L.push(fmtLen()); return L.join("\n"); },
+  world(){ const w=S.d.world,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push("Establish the WORLD — the mortal, lived-in layer of my setting.");
+    L.push(""); pushContext(L);
+    rowsB(L,[["Working name",w.name],["Genre feel",w.genre],["Technology level",w.tech],["Magic in society",w.prevalence],["Peoples",w.species],["Central conflict",w.conflict],["One-line pitch",w.pitch]]);
+    deliver(L,["A vivid overview of the world and its current moment in history.","The major powers/factions and what each wants.","How the central conflict touches ordinary people.","3-5 named regions I could zoom into next (one line each)."]);
+    L.push(fmtLen()); return L.join("\n"); },
+  region(){ const r=S.d.region,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push(`Develop a REGION of my world${r.name?`: "${r.name}"`:""}.`);
+    L.push(""); pushContext(L);
+    rowsB(L,[["Name",r.name],["Terrain",r.terrain],["Climate",r.climate],["Who governs it",r.governance],["Danger level",r.danger],["Role in the world",r.role],["Notable feature",r.feature]]);
+    deliver(L,["The feel of traveling through it and what makes it distinct.","Its people, power structure, and current troubles.","2-3 notable locations or landmarks.","3 adventure hooks rooted in this region."]);
+    L.push(fmtLen()); return L.join("\n"); },
+  city(){ const ct=S.d.city,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push(`Develop a SETTLEMENT${ct.name?`: "${ct.name}"`:""}.`);
+    L.push(""); pushContext(L);
+    rowsB(L,[["Name",ct.name],["Size",ct.size],["Government",ct.government],["Economy",ct.economy],["Signature landmark",ct.landmark],["Current tension / hook",ct.tension]]);
+    deliver(L,["First impressions: sights, sounds, smells as the party arrives.","Who holds power, who really runs things, and the tension between them.","3-4 keyed locations (inn, market, seat of power, a wildcard) with a hook each.","A rumor table (4-6 entries) the party might overhear."]);
+    L.push(fmtLen()); return L.join("\n"); },
+  npc(){ const n=S.d.npc,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push(`Create an NPC${n.name?`: "${n.name}"`:""}.`);
+    L.push(""); pushContext(L);
+    rowsB(L,[["Name",n.name],["Role / archetype",n.role],["Disposition to the party",n.disposition],["What they want",n.goal],["A secret they hide",n.secret],["A memorable quirk",n.quirk]]);
+    deliver(L,["A physical + voice sketch I can play instantly (how they talk, one gesture).","Their goal, their fear, and the secret — and how each could surface in play.","How they'd react if the party helps them / crosses them.","One quest or complication they could pull the party into."]);
+    L.push(fmtLen()); return L.join("\n"); },
+  quest(){ const q=S.d.quest,L=[];
+    L.push("You are my worldbuilding collaborator for a tabletop RPG campaign.");
+    L.push(`Design a QUEST${q.title?`: "${q.title}"`:""}.`);
+    L.push(""); pushContext(L);
+    rowsB(L,[["Title",q.title],["Type",q.qtype],["Difficulty tier",q.tier],["Stakes",q.stakes],["Quest giver",q.giver],["Reward",q.reward],["A twist to plant",q.twist]]);
+    deliver(L,["The hook: how the party gets pulled in.","3-5 beats/scenes from start to resolution, with room for player choice.","The twist and when it lands.","Key obstacles/foes, the reward, and one consequence that echoes forward."]);
+    L.push(fmtLen()); return L.join("\n"); }
+};
+function buildPrompt(){ return S.type && BUILD[S.type] ? BUILD[S.type]() : ""; }
+function colorize(text){
+  return text.split("\n").map(line=>{
+    if(/^\[.*\]$/.test(line)) return `<span class="p-tag">${esc(line)}</span>`;
+    if(/^(You are my|Design|Develop|Establish|Create)/.test(line)) return `<span class="p-h">${esc(line)}</span>`;
+    if(/surprise me|open —|open -/.test(line)) return `<span class="p-mut">${esc(line)}</span>`;
+    return esc(line);
+  }).join("\n");
+}
+
+/* forge field templates */
+function fSel(path,val,opts,ph){ let o=`<option value="">${ph||"— choose —"}</option>`; opts.forEach(x=>{o+=`<option value="${esc(x)}"${x===val?" selected":""}>${esc(x)}</option>`;}); return `<select data-bind="${path}">${o}</select>`; }
+function fInp(path,val,ph){ return `<input type="text" data-bind="${path}" value="${esc(val||"")}" placeholder="${esc(ph||"")}">`; }
+function fTxt(path,val,ph){ return `<textarea data-bind="${path}" placeholder="${esc(ph||"")}">${esc(val||"")}</textarea>`; }
+function fld(label,html,fx,full){ return `<div class="field${full?" full":""}"><label>${label}${fx?` <span class="fx">${fx}</span>`:""}</label>${html}</div>`; }
+const FORM = {
+  cosmology(){ const c=S.d.cosmology; return `<div class="fields">
+    ${fld("Cosmic structure",fSel("cosmology.planes",c.planes,OPT.planes))}
+    ${fld("The divine",fSel("cosmology.divine",c.divine,OPT.divine))}
+    ${fld("Source of magic",fSel("cosmology.magicSource",c.magicSource,OPT.magicSource))}
+    ${fld("Overall tone",fSel("cosmology.tone",c.tone,OPT.tone))}
+    ${fld("Afterlife",fInp("cosmology.afterlife",c.afterlife,"e.g. souls drift to a grey sea and slowly forget"),"optional",true)}
+    ${fld("Creation-myth seed",fTxt("cosmology.mythSeed",c.mythSeed,"twin moons at war, a world dreamed by a dying god…"),"optional",true)}
+  </div>`; },
+  world(){ const w=S.d.world; return `<div class="fields">
+    ${fld("Working name",fInp("world.name",w.name,"e.g. The Sundered Vale"))}
+    ${fld("Genre feel",fSel("world.genre",w.genre,OPT.genre))}
+    ${fld("Technology level",fSel("world.tech",w.tech,OPT.tech))}
+    ${fld("Magic in society",fSel("world.prevalence",w.prevalence,OPT.prevalence))}
+    ${fld("Central conflict",fSel("world.conflict",w.conflict,OPT.conflict))}
+    ${fld("Peoples",fInp("world.species",w.species,"comma-separated, e.g. Humans, Stoneborn, Fae"),"optional")}
+    ${fld("One-line pitch",fInp("world.pitch",w.pitch,"The hook you'd give a player in one sentence"),"optional",true)}
+  </div>`; },
+  region(){ const r=S.d.region; return `<div class="fields">
+    ${fld("Name",fInp("region.name",r.name,"e.g. The Ashen Marches"))}
+    ${fld("Role in the world",fSel("region.role",r.role,OPT.regionRole))}
+    ${fld("Terrain",fSel("region.terrain",r.terrain,OPT.terrain))}
+    ${fld("Climate",fSel("region.climate",r.climate,OPT.climate))}
+    ${fld("Who governs it",fSel("region.governance",r.governance,OPT.governance))}
+    ${fld("Danger level",fSel("region.danger",r.danger,OPT.danger))}
+    ${fld("Notable feature",fInp("region.feature",r.feature,"A landmark, a curse, a rare resource…"),"optional",true)}
+  </div>`; },
+  city(){ const ct=S.d.city; return `<div class="fields">
+    ${fld("Name",fInp("city.name",ct.name,"e.g. Greywater"))}
+    ${fld("Size",fSel("city.size",ct.size,OPT.citySize))}
+    ${fld("Government",fSel("city.government",ct.government,OPT.cityGov))}
+    ${fld("Economy",fSel("city.economy",ct.economy,OPT.economy))}
+    ${fld("Signature landmark",fInp("city.landmark",ct.landmark,"e.g. a drowned cathedral"),"optional")}
+    ${fld("Current tension / hook",fTxt("city.tension",ct.tension,"What's wrong here right now?"),"optional",true)}
+  </div>`; },
+  npc(){ const n=S.d.npc; return `<div class="fields">
+    ${fld("Name",fInp("npc.name",n.name,"e.g. Mother Sereth"))}
+    ${fld("Role / archetype",fSel("npc.role",n.role,OPT.npcRole))}
+    ${fld("Disposition to the party",fSel("npc.disposition",n.disposition,OPT.disposition))}
+    ${fld("What they want",fInp("npc.goal",n.goal,"Their driving goal"),"optional")}
+    ${fld("A secret they hide",fTxt("npc.secret",n.secret,"Something the party could discover"),"optional",true)}
+    ${fld("A memorable quirk",fInp("npc.quirk",n.quirk,"A voice, a tell, a habit"),"optional",true)}
+  </div>`; },
+  quest(){ const q=S.d.quest; return `<div class="fields">
+    ${fld("Title",fInp("quest.title",q.title,"e.g. The Debt Beneath Greywater"))}
+    ${fld("Type",fSel("quest.qtype",q.qtype,OPT.questType))}
+    ${fld("Difficulty tier",fSel("quest.tier",q.tier,OPT.questTier))}
+    ${fld("Stakes",fSel("quest.stakes",q.stakes,OPT.stakes))}
+    ${fld("Quest giver",fInp("quest.giver",q.giver,"An NPC's name / who hands it out"),"optional")}
+    ${fld("Reward",fInp("quest.reward",q.reward,"Coin, a favor, a secret, a cursed relic…"),"optional")}
+    ${fld("A twist to plant",fTxt("quest.twist",q.twist,"The turn that recontextualizes the job"),"optional",true)}
+  </div>`; }
+};
+
+/* forge -> codex bridge helpers */
+function forgeTitle(t){ const d=S.d[t];
+  if(t==="cosmology") return (S.d.world.name?S.d.world.name+" — ":"")+"Cosmology";
+  if(t==="world") return d.name||"The World";
+  if(t==="quest") return d.title||"Untitled Quest";
+  return d.name || (CX_LABEL[t]+" (unnamed)");
+}
+function forgeMeta(t){ const d=S.d[t];
+  if(t==="cosmology") return [d.tone,d.planes].filter(Boolean).join(" · ");
+  if(t==="world") return [d.genre,d.conflict].filter(Boolean).join(" · ");
+  if(t==="region") return [d.terrain,d.governance,d.danger].filter(Boolean).join(" · ");
+  if(t==="city") return [d.size,d.government].filter(Boolean).join(" · ");
+  if(t==="npc") return [d.role,d.disposition].filter(Boolean).join(" · ");
+  if(t==="quest") return [d.qtype,d.tier].filter(Boolean).join(" · ");
+  return "";
+}
+
+/* ============================================================
+   Render — router
+   ============================================================ */
+function renderSwitch(){
+  const n=S.codex.entries.length;
+  $("switch").innerHTML =
+    `<button class="vtab${S.view==="forge"?" on":""}" data-view="forge">Forge</button>
+     <button class="vtab${S.view==="codex"?" on":""}" data-view="codex">Codex ${n?`<span class="vc">${n}</span>`:""}</button>`;
+}
+function renderActions(){
+  let h="";
+  if(S.view==="forge" && S.type){
+    h+=`<button class="mh-btn danger" id="btnClear"><span id="clearLabel">Clear choices</span></button>`;
+  }
+  h+=`<button class="mh-btn" id="btnExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Backup</button>`;
+  h+=`<button class="mh-btn" id="btnImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 8l5-5 5 5"/><path d="M12 3v12"/></svg>Restore</button>`;
+  if(S.view==="codex") h+=`<button class="mh-btn" id="btnPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Print</button>`;
+  $("mhActions").innerHTML=h;
+}
+function renderAll(){ renderSwitch(); renderActions(); if(S.view==="forge") renderForge(); else renderCodex(); save(); }
+
+/* ---- FORGE view ---- */
+function renderForge(){
+  const wrap=$("wrap");
+  let h=`<div class="step"><span class="n">Step 1</span><h2>What do you want to create?</h2></div>
+    <div class="picker">${SUBJECTS.map(s=>`
+      <button class="ptile${S.type===s.id?" on":""}" data-type="${s.id}">
+        <span class="pt-scope">${s.scope}</span>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[s.id]}</svg>
+        <div class="pt-name">${s.name}</div><div class="pt-sub">${s.sub}</div>
+      </button>`).join("")}</div>`;
+
+  if(!S.type){
+    h+=`<div class="empty">
+      <svg class="em-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
+      <h3>Pick something to forge</h3>
+      <p>Choose a subject above and its choices appear — every field is optional. Once Claude answers, register the result in the Codex.</p>
+    </div>`;
+    wrap.innerHTML=h; return;
+  }
+  const subj=SUBJECTS.find(s=>s.id===S.type);
+  const prompt=buildPrompt();
+  h+=`<div class="step"><span class="n">Step 2</span><h2>Make your choices</h2><span class="hint">— forging a ${subj.name.toLowerCase()}</span></div>
+    <div class="card">
+      <div class="card-head"><h3>${subj.name}</h3><span class="hint">${subj.sub}</span></div>
+      <div class="card-body">
+        <div class="field full ctx-field" style="margin-bottom:15px">
+          <label>Setting context <span class="fx">optional — paste anything already established so the result stays consistent</span></label>
+          <textarea data-bind="context" placeholder="e.g. World: The Sundered Vale — grim, low-magic. This city sits in the Ashen Marches.">${esc(S.context)}</textarea>
+        </div>
+        ${FORM[S.type]()}
+      </div>
+    </div>
+    <div class="step"><span class="n">Step 3</span><h2>Forge it</h2></div>
+    <div class="forge">
+      <div class="forge-head"><span class="eyebrow">Your prompt</span>
+        <div class="fmt-toggle">
+          <button data-fmt="brief" class="${S.format==="brief"?"on":""}">Brief</button>
+          <button data-fmt="detailed" class="${S.format==="detailed"?"on":""}">Detailed</button>
+          <button data-fmt="deep" class="${S.format==="deep"?"on":""}">Deep</button>
+        </div>
+      </div>
+      <div class="forge-body">
+        <div class="prompt-box" id="promptBox">${colorize(prompt)}</div>
+        <div class="actions">
+          <button class="act copy" id="btnCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy prompt</button>
+          <a class="act mcclaude" id="btnClaude" href="${esc(CLAUDE_URL+encodeURIComponent(prompt))}" target="_blank" rel="noopener"><svg class="halo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5.8L20 9l-4.5 4 1.3 6L12 16l-4.8 3 1.3-6L4 9l5.6-1.2L12 2Z"/></svg>Ask immortal McClaude</a>
+          <button class="act tocodex" id="btnToCodex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M12 7v6M9 10h6"/></svg>Save to Codex</button>
+        </div>
+        <p class="act-note"><b>Ask immortal McClaude</b> opens Claude with the prompt typed in — just hit send. Then <b>Save to Codex</b> to register what comes back, ready to paste.</p>
+      </div>
+    </div>`;
+  wrap.innerHTML=h;
+}
+function refreshForge(){
+  const box=$("promptBox"), link=$("btnClaude"), p=buildPrompt();
+  if(box) box.innerHTML=colorize(p);
+  if(link) link.setAttribute("href", CLAUDE_URL+encodeURIComponent(p));
+}
+
+/* ============================================================
+   CODEX view
+   ============================================================ */
+function catCount(c){ return c==="all"?S.codex.entries.length:S.codex.entries.filter(e=>e.cat===c).length; }
+function visibleEntries(){ const c=S.codex.cat; const list=c==="all"?S.codex.entries.slice():S.codex.entries.filter(e=>e.cat===c); return list.sort((a,b)=>(b.ts||0)-(a.ts||0)); }
+
+function renderCodex(){
+  const wrap=$("wrap");
+  let h=`<div class="step"><span class="n">Codex</span><h2>Your world, registered</h2></div>
+    <p class="sec-intro">Everything you forge lives here. Reference other entries by typing <b class="mono">@</b> and picking from the list — a city can point to its <span class="mention">@region</span>, a quest to its giver. Click a reference to jump to it.</p>`;
+
+  h+=`<div class="cats">`;
+  h+=`<button class="cat${S.codex.cat==="all"?" on":""}" data-cat="all">All <span class="count">${catCount("all")}</span></button>`;
+  CX_CATS.forEach(c=>{ h+=`<button class="cat${S.codex.cat===c?" on":""}" data-cat="${c}">${CX_LABEL[c]} <span class="count">${catCount(c)}</span></button>`; });
+  h+=`</div>`;
+
+  h+=`<div class="add-row"><button class="add-btn" id="btnNew">＋ New entry</button></div>`;
+
+  if(draft) h+=editorHTML();
+
+  const list=visibleEntries();
+  if(!list.length && !draft){
+    h+=`<div class="empty">
+      <svg class="em-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+      <h3>Nothing registered yet</h3>
+      <p>Forge something, get Claude's answer, then paste it here — or add an entry directly.</p>
+    </div>`;
+  } else {
+    h+=`<div class="cx-list">`+list.map(cardHTML).join("")+`</div>`;
+  }
+  wrap.innerHTML=h;
+}
+
+function editorHTML(){
+  const isNew=!draftId;
+  let catOpts=CX_CATS.map(c=>`<option value="${c}"${draft.cat===c?" selected":""}>${CX_LABEL[c]}</option>`).join("");
+  return `<div class="editor" id="editor">
+    <div class="etitle">${isNew?"New entry":"Edit entry"}</div>
+    <div class="field"><label class="flabel">Kind</label>
+      <select class="jin" id="edCat">${catOpts}</select></div>
+    <div class="field"><label class="flabel">${CX_TITLE_LABEL[draft.cat]||"Title"}</label>
+      <input class="jin" id="edTitle" data-field="title" type="text" value="${esc(draft.title)}" placeholder="e.g. Greywater" autocomplete="off"></div>
+    <div class="field"><label class="flabel">Summary <span class="fx">one line, shown under the title</span></label>
+      <input class="jin" id="edSummary" data-field="summary" type="text" value="${esc(draft.summary)}" placeholder="${esc(CX_META_PH[draft.cat]||"")}" autocomplete="off"></div>
+    <div class="field"><label class="flabel">The writeup <span class="fx">paste Claude's answer — type @ to reference another entry</span></label>
+      <textarea class="jin jarea" id="edBody" data-field="body" placeholder="Paste the generated content here. Mention others with @ — e.g. 'Ruled from @[The Ashen Marches].'">${esc(draft.body)}</textarea>
+      <div class="ref-hint">Tip: type <b>@</b> to link places, NPCs, and quests you've already saved.</div>
+    </div>
+    <div class="save-row">
+      <button class="pill-btn primary" id="edSave">Save entry</button>
+      <button class="pill-btn" id="edCancel">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function cardHTML(e){
+  const isOpen=!!expanded[e.id];
+  const bodyHasMore=(e.body||"").length>360 || (e.body||"").split("\n").length>7;
+  const del = pendingDel===e.id
+    ? `<span class="del-ask">Delete this entry? <button data-delyes="${e.id}">Delete</button><button class="no" data-delno="1">Keep</button></span>`
+    : `<button class="icon-btn" data-edit="${e.id}">Edit</button><button class="icon-btn warn" data-del="${e.id}">Delete</button>`;
+  return `<div class="cx-card" id="cx-${e.id}">
+    <div class="cx-top">
+      <div style="flex:1;min-width:0">
+        <span class="cx-tag">${CX_LABEL[e.cat]||"Note"}</span>
+        <div class="cx-title">${esc(e.title||"Untitled")}</div>
+        ${e.summary?`<div class="cx-meta">${linkify(e.summary)}</div>`:""}
+      </div>
+    </div>
+    ${e.body?`<div class="cx-body ${(!isOpen&&bodyHasMore)?"clamp":""}">${linkify(e.body)}</div>`:""}
+    ${bodyHasMore?`<button class="cx-more" data-more="${e.id}">${isOpen?"Show less":"Show more"}</button>`:""}
+    <div class="cx-btns">${del}</div>
+  </div>`;
+}
+
+/* ---- codex mutators ---- */
+function newEntry(){ pendingDel=null; const c=S.codex.cat==="all"?"lore":S.codex.cat; draft={id:uid(),cat:c,title:"",summary:"",body:"",ts:Date.now()}; draftId=null; renderAll(); focusEditor(); }
+function editEntry(id){ const e=S.codex.entries.find(x=>x.id===id); if(!e) return; pendingDel=null; draft=JSON.parse(JSON.stringify(e)); draftId=id; renderAll(); focusEditor(); }
+function saveEntry(){
+  if(!draft) return;
+  if(!draft.title.trim() && !draft.body.trim()){ toast("Give it a title or some text first","err"); return; }
+  draft.ts=draft.ts||Date.now();
+  if(draftId){ const i=S.codex.entries.findIndex(x=>x.id===draftId); if(i>-1) S.codex.entries[i]=draft; }
+  else S.codex.entries.unshift(draft);
+  const savedCat=draft.cat; draft=null; draftId=null;
+  if(S.codex.cat!=="all" && S.codex.cat!==savedCat) S.codex.cat=savedCat;
+  renderAll(); toast("Saved to Codex");
+}
+function cancelEdit(){ draft=null; draftId=null; renderAll(); }
+function delEntry(id){ S.codex.entries=S.codex.entries.filter(x=>x.id!==id); pendingDel=null; renderAll(); toast("Entry removed"); }
+function focusEditor(){ requestAnimationFrame(()=>{ const el=$("edTitle"); if(el&&el.scrollIntoView) $("editor").scrollIntoView({behavior:"smooth",block:"center"}); if(el) el.focus(); }); }
+
+/* bridge: forge -> codex */
+function saveToCodex(){
+  const t=S.type; if(!t) return;
+  const e={id:uid(), cat:t, title:forgeTitle(t), summary:forgeMeta(t), body:"", ts:Date.now()};
+  S.codex.entries.unshift(e);
+  S.view="codex"; S.codex.cat=t; draft=JSON.parse(JSON.stringify(e)); draftId=e.id;
+  renderAll(); focusEditor();
+  toast("Added to Codex — paste Claude's answer into the writeup");
+}
+
+/* ============================================================
+   @mention engine (reference function)
+   ============================================================ */
+function mentionIndex(){
+  const idx=S.codex.entries.filter(e=>(e.title||"").trim()).map(e=>({id:e.id, cat:e.cat, title:e.title.trim()}));
+  idx.sort((a,b)=>b.title.length-a.title.length);
+  return idx;
+}
+function entryById(id){ return S.codex.entries.find(e=>e.id===id)||null; }
+function mentionAnchor(e){ return `<a class="mention" data-goto="${e.id}">@${esc(e.title)}</a>`; }
+function linkify(text){
+  const idx=mentionIndex(); let out="", i=0, len=text.length;
+  while(i<len){
+    if(text[i]==="@"){
+      if(text[i+1]==="["){
+        const close=text.indexOf("]", i+2);
+        if(close>-1){ const name=text.slice(i+2,close).trim(); const hit=idx.find(e=>e.title.toLowerCase()===name.toLowerCase()); if(hit){ out+=mentionAnchor(hit); i=close+1; continue; } }
+      }
+      const rest=text.slice(i+1), restL=rest.toLowerCase(); let hit=null;
+      for(const e of idx){ const tl=e.title.toLowerCase(); if(restL.startsWith(tl)){ const after=rest[e.title.length]; if(after===undefined || !/[A-Za-z0-9]/.test(after)){ hit=e; break; } } }
+      if(hit){ out+=mentionAnchor(hit); i+=1+hit.title.length; continue; }
+    }
+    out+=esc(text[i]); i++;
+  }
+  return out;
+}
+function gotoEntry(id){
+  hideTip(); acHide();
+  const e=entryById(id); if(!e) return;
+  S.view="codex"; if(S.codex.cat!=="all" && S.codex.cat!==e.cat) S.codex.cat=e.cat;
+  draft=null; draftId=null; renderAll();
+  requestAnimationFrame(()=>{ const card=$("cx-"+id); if(card){ if(card.scrollIntoView) card.scrollIntoView({behavior:"smooth",block:"center"}); card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash"); } });
+}
+
+/* tooltip */
+let tipEl=null;
+function ensureTip(){ if(!tipEl){ tipEl=document.createElement("div"); tipEl.className="m-tip"; document.body.appendChild(tipEl); } return tipEl; }
+function showTip(anchor){
+  if(!anchor||!anchor.dataset) return;
+  const id=anchor.dataset.goto; const e=entryById(id); if(!e) return;
+  const tip=ensureTip();
+  const snip=(e.body||"").trim(); const short=snip.length>160?snip.slice(0,160).trimEnd()+"…":snip;
+  tip.innerHTML=`<div class="tt-type">${CX_LABEL[e.cat]||"Note"}</div><div class="tt-title">${esc(e.title||"—")}</div>`
+    +(e.summary?`<div class="tt-meta">${esc(e.summary)}</div>`:"")
+    +(short?`<div class="tt-body">${esc(short)}</div>`:"");
+  const r=anchor.getBoundingClientRect(); tip.classList.add("show");
+  const tw=tip.offsetWidth, th=tip.offsetHeight, pad=8;
+  let left=Math.min(Math.max(pad,r.left), window.innerWidth-tw-pad);
+  let top=r.top-th-8; if(top<pad) top=r.bottom+8;
+  tip.style.left=left+"px"; tip.style.top=top+"px";
+}
+function hideTip(){ if(tipEl) tipEl.classList.remove("show"); }
+
+/* autocomplete */
+let acEl=null, ac={open:false, field:null, atPos:0, items:[], sel:0};
+function ensureAc(){ if(!acEl){ acEl=document.createElement("div"); acEl.className="ac"; acEl.style.display="none"; document.body.appendChild(acEl);
+  acEl.addEventListener("mousedown", e=>{ const it=e.target.closest("[data-acpick]"); if(it){ e.preventDefault(); acChoose(+it.dataset.acpick); } });
+} return acEl; }
+function acHide(){ ac.open=false; ac.field=null; if(acEl) acEl.style.display="none"; }
+function acRenderList(){
+  const box=ensureAc();
+  if(!ac.items.length){ box.innerHTML=`<div class="ac-hint">No match yet — save that entry first, then it can be referenced.</div>`; return; }
+  box.innerHTML=ac.items.map((e,i)=>`<div class="ac-item${i===ac.sel?" on":""}" data-acpick="${i}"><span class="ai-type">${CX_LABEL[e.cat]}</span><span class="ai-title">${esc(e.title)}</span></div>`).join("");
+}
+function acUpdate(el){
+  if(!el || (el.tagName!=="TEXTAREA" && !(el.tagName==="INPUT"&&el.type==="text"))){ acHide(); return; }
+  if(el.id!=="edBody" && el.id!=="edSummary"){ acHide(); return; }
+  const caret=el.selectionStart, val=el.value;
+  let p=caret-1, at=-1;
+  while(p>=0){ const ch=val[p]; if(ch==="\n") break; if(ch==="@"){ const prev=val[p-1]; if(p===0||/\s/.test(prev)) at=p; break; } p--; }
+  if(at===-1){ acHide(); return; }
+  const query=val.slice(at+1,caret); if(query.length>40){ acHide(); return; }
+  const ql=query.toLowerCase();
+  const items=mentionIndex().filter(e=>e.title.toLowerCase().includes(ql)).slice(0,8);
+  if(!query && !items.length){ acHide(); return; }
+  ac.open=true; ac.field=el; ac.atPos=at; ac.items=items; ac.sel=0;
+  const box=ensureAc(); box.style.display="block"; acRenderList();
+  const r=el.getBoundingClientRect(); const bw=box.offsetWidth, bh=box.offsetHeight, pad=8;
+  let left=Math.min(Math.max(pad,r.left), window.innerWidth-bw-pad);
+  let top=r.bottom+4; if(top+bh>window.innerHeight-pad) top=Math.max(pad, r.top-bh-4);
+  box.style.left=left+"px"; box.style.top=top+"px";
+}
+function acChoose(i){
+  const e=ac.items[i], el=ac.field; if(!e||!el) return;
+  const val=el.value, before=val.slice(0,ac.atPos), after=val.slice(el.selectionStart);
+  const insert = (/\s/.test(e.title) ? "@["+e.title+"] " : "@"+e.title+" ");
+  const newVal=before+insert+after; el.value=newVal;
+  const caret=(before+insert).length; el.setSelectionRange(caret,caret);
+  if(draft && el.dataset.field) draft[el.dataset.field]=newVal;
+  acHide(); el.focus();
+}
+
+/* ============================================================
+   Export / import / print
+   ============================================================ */
+function exportJSON(){
+  const data=JSON.stringify(S,null,2);
+  const nm=(S.d.world.name||"world").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||"world";
+  try{
+    const blob=new Blob([data],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=nm+".loom.json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); toast("Backup saved: "+nm+".loom.json");
+  }catch(e){ copy(data,"Download blocked — full backup copied to clipboard instead"); }
+}
+function importJSON(file){
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ hydrate(JSON.parse(rd.result)); draft=null; draftId=null; renderAll(); toast("Restored"); }catch(e){ toast("That file didn't parse","err"); } };
+  rd.onerror=()=>toast("Couldn't read that file","err");
+  rd.readAsText(file);
+}
+let clearArmed=false, clearT=null;
+function clearForge(){
+  const lbl=$("clearLabel"); if(!lbl) return;
+  if(!clearArmed){ clearArmed=true; lbl.textContent="Tap again to clear"; clearTimeout(clearT); clearT=setTimeout(()=>{clearArmed=false;lbl.textContent="Clear choices";},2600); return; }
+  clearArmed=false; clearTimeout(clearT);
+  const keep=S.type; const b=blank(); b.view="forge"; b.type=keep; b.codex=S.codex; S=b; renderAll(); toast("Choices cleared");
+}
+
+/* ============================================================
+   Events
+   ============================================================ */
+function setPath(path,value){ if(path==="context"){ S.context=value; return; } const [h,k]=path.split("."); if(S.d[h]) S.d[h][k]=value; }
+
+function wire(){
+  document.body.addEventListener("click", e=>{
+    // view switch
+    const vt=e.target.closest("[data-view]"); if(vt){ S.view=vt.dataset.view; draft=null; draftId=null; renderAll(); return; }
+    // header actions
+    if(e.target.closest("#btnExport")){ exportJSON(); return; }
+    if(e.target.closest("#btnImport")){ $("fileImport").click(); return; }
+    if(e.target.closest("#btnPrint")){ window.print(); return; }
+    if(e.target.closest("#btnClear")){ clearForge(); return; }
+
+    // forge
+    const tile=e.target.closest("[data-type]"); if(tile){ S.type=tile.dataset.type; renderAll(); const b=$("wrap"); return; }
+    const fmt=e.target.closest("[data-fmt]"); if(fmt){ S.format=fmt.dataset.fmt; renderAll(); return; }
+    if(e.target.closest("#btnCopy")){ copy(buildPrompt(),"Prompt copied — paste it to Claude"); return; }
+    if(e.target.closest("#btnToCodex")){ saveToCodex(); return; }
+
+    // codex nav
+    const catB=e.target.closest("[data-cat]"); if(catB){ S.codex.cat=catB.dataset.cat; pendingDel=null; renderAll(); return; }
+    if(e.target.closest("#btnNew")){ newEntry(); return; }
+    if(e.target.closest("#edSave")){ saveEntry(); return; }
+    if(e.target.closest("#edCancel")){ cancelEdit(); return; }
+    const ed=e.target.closest("[data-edit]"); if(ed){ editEntry(ed.dataset.edit); return; }
+    const dl=e.target.closest("[data-del]"); if(dl){ pendingDel=dl.dataset.del; renderAll(); return; }
+    const dy=e.target.closest("[data-delyes]"); if(dy){ delEntry(dy.dataset.delyes); return; }
+    if(e.target.closest("[data-delno]")){ pendingDel=null; renderAll(); return; }
+    const mo=e.target.closest("[data-more]"); if(mo){ expanded[mo.dataset.more]=!expanded[mo.dataset.more]; renderAll(); return; }
+
+    // mention click -> jump
+    const men=e.target.closest(".mention"); if(men){ e.preventDefault(); gotoEntry(men.dataset.goto); return; }
+  });
+
+  // hover tooltip on mentions
+  document.body.addEventListener("mouseover", e=>{ const m=e.target.closest(".mention"); if(m) showTip(m); });
+  document.body.addEventListener("mouseout", e=>{ if(e.target.closest(".mention")) hideTip(); });
+
+  // selects / change
+  document.body.addEventListener("change", e=>{
+    const b=e.target.closest("[data-bind]"); if(b){ setPath(b.dataset.bind, b.value); renderAll(); return; }
+    if(e.target.id==="edCat" && draft){ draft.cat=e.target.value; renderAll(); focusEditor(); return; }
+    if(e.target.id==="fileImport" && e.target.files[0]){ importJSON(e.target.files[0]); e.target.value=""; }
+  });
+
+  // typing: forge text + codex editor fields
+  document.body.addEventListener("input", e=>{
+    const b=e.target.closest("[data-bind]");
+    if(b && (b.tagName==="TEXTAREA" || (b.tagName==="INPUT"&&b.type==="text"))){ setPath(b.dataset.bind, b.value); refreshForge(); save(); return; }
+    const f=e.target.closest("[data-field]");
+    if(f && draft){ draft[f.dataset.field]=f.value; save(); acUpdate(f); return; }
+  });
+
+  // autocomplete keyboard
+  document.body.addEventListener("keydown", e=>{
+    if(!ac.open) return;
+    if(e.key==="ArrowDown"){ e.preventDefault(); ac.sel=(ac.sel+1)%Math.max(1,ac.items.length); acRenderList(); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); ac.sel=(ac.sel-1+ac.items.length)%Math.max(1,ac.items.length); acRenderList(); }
+    else if(e.key==="Enter" && ac.items.length){ e.preventDefault(); acChoose(ac.sel); }
+    else if(e.key==="Escape"){ acHide(); }
+  });
+  document.addEventListener("scroll", ()=>{ hideTip(); acHide(); }, true);
+  document.body.addEventListener("click", e=>{ if(!e.target.closest(".ac") && !e.target.closest("[data-field]")) acHide(); });
+}
+
+/* boot */
+load(); renderAll(); wire();
+</script>
+</body>
+</html>
