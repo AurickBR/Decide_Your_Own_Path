@@ -1,0 +1,37 @@
+Decide Your Own Path
+====================
+
+SCOPE OF THIS LICENCE
+---------------------
+The MIT licence below covers only the parts of this project that are our own:
+the source code of the tools, the homebrew rules and system design, and the
+original prose written for this project (talent text, creature write-ups,
+campaign material).
+
+It does NOT cover material derived from Wizards of the Coast. That material is
+used under two separate arrangements described in NOTICE, and we have no right
+to sub-licence it to you. If you copy or fork this project, those arrangements
+come with it -- in particular, the copy must remain free of charge and free of
+access gates.
+
+MIT License
+
+Copyright (c) 2026 the Decide Your Own Path contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
