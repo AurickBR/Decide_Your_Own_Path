@@ -77,6 +77,7 @@ input,select{font-family:inherit}
 .attr{background:var(--raised); border:1px solid var(--line-solid); border-radius:10px; padding:12px; text-align:center; position:relative}
 .attr .an{font-family:"IM Fell English",serif; font-size:.82rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
 .attr .mod{font-family:"JetBrains Mono",monospace; font-size:1.05rem; color:var(--verd); margin-top:2px}
+.attr .mod.neg{color:var(--rust)}
 .attr .stepper{display:flex; align-items:center; justify-content:center; gap:10px; margin:8px 0 4px}
 .attr .score{font-family:"JetBrains Mono",monospace; font-size:1.9rem; color:var(--bone); min-width:2.2ch}
 .step-btn{width:30px; height:30px; border-radius:8px; border:1px solid var(--line-solid); background:#0f111a; color:var(--bone); font-size:1.1rem; line-height:1; display:grid; place-items:center; transition:.12s}
@@ -525,6 +526,7 @@ input,select{font-family:inherit}
 .sv-attr.save{border-color:var(--verd-deep)}
 .sv-attr .n{font-size:.66rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase}
 .sv-attr .m{font-family:"JetBrains Mono",monospace; font-size:1.5rem; color:var(--bone)}
+.sv-attr .m.neg{color:var(--rust)}
 .sv-attr .s{font-size:.6rem; color:var(--muted); font-family:"JetBrains Mono",monospace}
 .sv-attr .sv-save{font-size:.5rem; color:var(--verd); letter-spacing:.1em; text-transform:uppercase; margin-top:2px; min-height:.7em}
 
@@ -567,6 +569,7 @@ input,select{font-family:inherit}
   .sheet-view{max-width:none; padding:0}
   body{background:#fff; color:#000}
   .vital,.sv-attr,.sv-stat,.sv-talent,.sv-spell,.sv-line{background:#fff; border-color:#999}
+  .sv-attr .m.neg{color:#b23a2a!important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
   .sv-tbody{display:block!important}
 }
 
@@ -1280,7 +1283,7 @@ function renderAttrs(){
     c.innerHTML=`
       <button class="save-toggle ${S.saves.includes(k)?'on':''}" data-save="${k}" title="Toggle saving throw">Save</button>
       <div class="an" title="${full}">${k}</div>
-      <div class="mod mono">${m>=0?'+':''}${m}</div>
+      <div class="mod mono${m<0?' neg':''}">${m>=0?'+':''}${m}</div>
       <div class="stepper">
         <button class="step-btn" data-dn="${k}" ${canDown?'':'disabled'}>−</button>
         <span class="score mono">${sc}</span>
@@ -2223,7 +2226,7 @@ function renderSheetView(){
   // Attributes
   H+=`<div class="sv-block"><h3>Attributes</h3><div class="sv-attrs">`;
   for(const [k,full] of ATTRS){ const sc=S.attr[k],md2=mod(sc),on=S.saves.includes(k);
-    H+=`<div class="sv-attr${on?' save':''}" title="${full}"><div class="n">${k}</div><div class="m">${md2>=0?'+':''}${md2}</div><div class="s">score ${sc}</div><div class="sv-save">${on?'save':''}</div></div>`; }
+    H+=`<div class="sv-attr${on?' save':''}" title="${full}"><div class="n">${k}</div><div class="m${md2<0?' neg':''}">${md2>=0?'+':''}${md2}</div><div class="s">score ${sc}</div><div class="sv-save">${on?'save':''}</div></div>`; }
   H+=`</div></div>`;
 
   // Combat / core stats
