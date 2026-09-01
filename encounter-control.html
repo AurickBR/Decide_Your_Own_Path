@@ -321,6 +321,14 @@ input,select,textarea{font-family:inherit}
 .res{display:flex; align-items:center; gap:10px; background:var(--raised); border:1px solid var(--line-solid); border-radius:9px; padding:9px 11px; text-align:left; transition:.12s; width:100%}
 .res:hover{border-color:var(--verd); background:#252b38}
 .res .rg{font-size:1.25rem; flex:0 0 auto}
+.rgw{position:relative; flex:0 0 auto; display:inline-flex; align-items:center}
+.res-n{position:absolute; top:-6px; right:-9px; min-width:17px; height:17px; padding:0 4px; border-radius:20px;
+  background:var(--gold); color:#191b24; font-family:"JetBrains Mono",monospace; font-size:.6rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--raised); pointer-events:none}
+.res.has{border-color:#5f5540; background:#262319}
+.res.has:hover{border-color:var(--verd); background:#2b2822}
+.res.has .rn{color:var(--gold)}
+.res:hover .res-n{box-shadow:0 0 0 2px #2b2822}
 .res .rmain{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px}
 .res .rn{display:block; font-family:"IM Fell English",serif; font-size:1rem; color:var(--bone); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .res .rm{display:block; font-size:.64rem; color:var(--muted); font-family:"JetBrains Mono",monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -663,6 +671,7 @@ function hydrate(p){
     ? S.savedRolls.filter(r=>r && r.sides).map(r=>({id:r.id||uid(), name:String(r.name||""), qty:Math.max(1,num(r.qty,1)), sides:num(r.sides,20), mod:num(r.mod,0)}))
     : [];
   S.round = Math.max(1, num(S.round,1));
+  backfillTpl();
   if(S.activeId && !S.cs.some(c=>c.id===S.activeId)) S.activeId = null;
   if(!S.cs.length){ S.started=false; S.activeId=null; }
 }
@@ -682,6 +691,7 @@ function fixCombatant(c){
   c.cond = Array.isArray(c.cond) ? c.cond.filter(x=>x&&x.n).map(x=>({n:String(x.n), r:(x.r==null?null:Math.max(1,num(x.r,1)))})) : [];
   c.note = String(c.note||"");
   c.bonusDice = String(c.bonusDice||"");
+  c.tpl = c.tpl ? String(c.tpl) : "";      // "<shelf>|<creature>" — what the picker counts
   c.blk = (c.blk && typeof c.blk==="object") ? c.blk : null;
   return c;
 }
@@ -872,6 +882,22 @@ function adjustPool(id, key, delta){
 /* ============================================================
    Adding combatants
    ============================================================ */
+const tplKey = t => `${t.sec}|${t.n}`;
+function inFrayCounts(){
+  const m = {};
+  S.cs.forEach(c=>{ if(c.tpl) m[c.tpl] = (m[c.tpl]||0) + 1; });
+  return m;
+}
+/* older saves have no tpl — recover it from the statblock and the numbered name */
+function backfillTpl(){
+  const byKey = {};
+  BESTIARY.forEach(b=>{ byKey[tplKey(b)] = true; });
+  S.cs.forEach(c=>{
+    if(c.tpl || !c.blk || !c.blk.sec) return;
+    const k = `${c.blk.sec}|${c.name.replace(/\s+\d+$/, "")}`;
+    if(byKey[k]) c.tpl = k;
+  });
+}
 function uniqueName(base){
   const taken = S.cs.map(c=>c.name);
   if(!taken.includes(base)) return base;
@@ -887,7 +913,7 @@ function insertCombatant(c){
 function fromTemplate(t, side){
   const hd = t.hd || hitDiceFor(t.lv||1);
   return {
-    id:uid(), side:side||"foe", name:uniqueName(t.n), g:t.g||"⚔",
+    id:uid(), side:side||"foe", name:uniqueName(t.n), g:t.g||"⚔", tpl:tplKey(t),
     sub:[t.sz, t.ty, t.lv?("level "+t.lv):(t.cr?("CR "+t.cr):""), t.sp].filter(Boolean).join(" · "),
     ac:t.ac, initMod:t.init, init:null,
     hp:{c:t.hp,m:t.hp}, thp:0, tp:{c:t.tp||0,m:t.tp||0}, mana:{c:t.mana||0,m:t.mana||0},
@@ -1347,6 +1373,13 @@ function filteredBestiary(){
   }
   return out;
 }
+function resHTML(b, i, n){
+  return `<button class="res${n?" has":""}" data-add="${i}"${n?` title="${esc(b.n)} — ${n} already in the fray"`:""}>
+      <span class="rgw"><span class="rg">${esc(b.g)}</span>${n?`<span class="res-n">${n>99?"99+":n}</span>`:""}</span>
+      <span class="rmain"><span class="rn">${esc(b.n)}</span><span class="rm">${esc(b.race)} · ${b.lv?("lv "+b.lv):("CR "+b.cr)}</span></span>
+      <span class="rstat"><span class="a">AC ${b.ac}</span><span class="h">${b.hp} hp</span></span>
+    </button>`;
+}
 function pickerHTML(){
   if(!ui.pick) return S.started
     ? `<div class="add-row slim"><button class="rbtn" id="btnOpenPick">${svg(ICO.plus)}Add a combatant</button></div>`
@@ -1354,26 +1387,25 @@ function pickerHTML(){
   let body = "";
   if(ui.tab==="bestiary"){
     const list = filteredBestiary();
+    const cnt = inFrayCounts();
     body = `<div class="searchrow">
-        <input type="text" id="pkQ" value="${esc(ui.q)}" placeholder="Search 275 creatures — name, race, type…" autocomplete="off">
+        <input type="text" id="pkQ" value="${esc(ui.q)}" placeholder="Search ${BESTIARY.length} creatures — name, race, type…" autocomplete="off">
         <select id="pkSec"><option value="All"${ui.sec==="All"?" selected":""}>All shelves</option>
           ${SECTIONS.map(s=>`<option value="${esc(s)}"${ui.sec===s?" selected":""}>${SEC_GLYPH[s]||""} ${esc(s)}</option>`).join("")}</select>
       </div>
       <div class="results">${
-        list.length ? list.map(({b,i})=>`<button class="res" data-add="${i}">
-            <span class="rg">${esc(b.g)}</span>
-            <span class="rmain"><span class="rn">${esc(b.n)}</span><span class="rm">${esc(b.race)} · ${b.lv?("lv "+b.lv):("CR "+b.cr)}</span></span>
-            <span class="rstat"><span class="a">AC ${b.ac}</span><span class="h">${b.hp} hp</span></span>
-          </button>`).join("")
+        list.length ? list.map(({b,i})=>resHTML(b,i,cnt[tplKey(b)]||0)).join("")
         : `<div class="empty" style="grid-column:1/-1"><p>Nothing on the shelves matches that.</p></div>`
       }</div>`;
   } else if(ui.tab==="party"){
     body = S.party.length
-      ? `<div class="results">${S.party.map(p=>`<button class="res" data-addpc="${p.id}">
-            <span class="rg">${esc(p.g||"🛡")}</span>
+      ? `<div class="results">${S.party.map(p=>{
+            const n = S.cs.filter(c=>c.side==="pc" && c.name.replace(/\s+\d+$/,"")===p.name).length;
+            return `<button class="res${n?" has":""}" data-addpc="${p.id}"${n?` title="${esc(p.name)} — already in the fray"`:""}>
+            <span class="rgw"><span class="rg">${esc(p.g||"🛡")}</span>${n?`<span class="res-n">${n}</span>`:""}</span>
             <span class="rmain"><span class="rn">${esc(p.name)}</span><span class="rm">level ${p.level} · init ${sgn(p.initMod)}</span></span>
             <span class="rstat"><span class="a">AC ${p.ac}</span><span class="h">${p.hp} hp</span></span>
-          </button>`).join("")}</div>
+          </button>`;}).join("")}</div>
          <div class="pk-foot"><button class="cbtn" id="btnAddAllPC">Add the whole party</button></div>`
       : `<div class="empty"><h3>No party saved yet</h3><p>Open the <b>Party</b> tab up top and drop in the <span class="mono">.dyop.json</span> files your players export from the Character Builder.</p></div>`;
   } else {
@@ -1663,12 +1695,10 @@ function syncBar(c, key){
   pool.style.width = (c[key].m>0 ? clamp(Math.round(c[key].c/c[key].m*100),0,100) : 0) + "%";
 }
 function refreshResults(box){
-  const list = filteredBestiary();
-  box.innerHTML = list.length ? list.map(({b,i})=>`<button class="res" data-add="${i}">
-      <span class="rg">${esc(b.g)}</span>
-      <span class="rmain"><span class="rn">${esc(b.n)}</span><span class="rm">${esc(b.race)} · ${b.lv?("lv "+b.lv):("CR "+b.cr)}</span></span>
-      <span class="rstat"><span class="a">AC ${b.ac}</span><span class="h">${b.hp} hp</span></span>
-    </button>`).join("") : `<div class="empty" style="grid-column:1/-1"><p>Nothing on the shelves matches that.</p></div>`;
+  const list = filteredBestiary(), cnt = inFrayCounts();
+  box.innerHTML = list.length
+    ? list.map(({b,i})=>resHTML(b,i,cnt[tplKey(b)]||0)).join("")
+    : `<div class="empty" style="grid-column:1/-1"><p>Nothing on the shelves matches that.</p></div>`;
 }
 
 
@@ -2045,34 +2075,11 @@ load(); renderAll(); wire(); wireDice();
 /* test hooks */
 window.__fray = { get S(){return S;}, get ui(){return ui;}, renderAll, displayOrder, byId,
                   rollDice, rollNamed, rollSaved, parseDmg, parseRider, diceToggle, commitSavedRoll,
-                  explodeDie, rollExploding, eligibleTargets, resolveAttack, applyAttack, openAtkPanel, isCharmed,
+                  explodeDie, rollExploding, eligibleTargets, inFrayCounts, tplKey, resolveAttack, applyAttack, openAtkPanel, isCharmed,
                   get diceLog(){return diceLog;}, get diceOpen(){return diceOpen;}, get lastRoll(){return lastRoll;}, damage, heal, grantTemp,
                   startEncounter, nextTurn, prevTurn, endEncounter, addTemplate, addCustom, sortCs,
                   charDerived, importCharacter, BESTIARY, hydrate, blank };
 })();
 </script>
-
-<!-- ============================================================
-     Legal notice — required by the Wizards of the Coast SRD 5.2.1
-     (CC-BY-4.0) and by the Fan Content Policy.
-     The two statements below are quoted verbatim from those
-     policies. Do not paraphrase, reorder or shorten them.
-     ============================================================ -->
-<style>
-.dyop-legal{max-width:1000px;margin:60px auto 0;padding:22px 20px 36px;border-top:1px solid #303545;
-  font-family:"Spectral",Georgia,serif;font-size:.72rem;line-height:1.65;color:#8a8fa0;text-align:center}
-.dyop-legal p{margin:0 0 9px}
-.dyop-legal a{color:#3f8f75;text-decoration:none}
-.dyop-legal a:hover{color:#d8d3c3;text-decoration:underline}
-.dyop-legal strong{color:#8a8fa0;font-weight:600}
-.dyop-legal .dyop-legal-note{font-style:italic;opacity:.85;margin-top:13px}
-@media print{.dyop-legal{display:none !important}}
-</style>
-<footer class="dyop-legal">
-  <p><strong>Decide Your Own Path</strong> is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. &copy;Wizards of the Coast LLC.</p>
-  <p>This work includes material from the System Reference Document 5.2.1 (&ldquo;SRD 5.2.1&rdquo;) by Wizards of the Coast LLC, available at <a href="https://www.dndbeyond.com/srd" target="_blank" rel="noopener">https://www.dndbeyond.com/srd</a>. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at <a href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank" rel="noopener">https://creativecommons.org/licenses/by/4.0/legalcode</a>.</p>
-  <p class="dyop-legal-note">A free fan project &mdash; never sold, never gated. &middot; <a href="https://aurickbr.github.io/Decide_Your_Own_Path/legal.html">Full licensing notice</a></p>
-</footer>
-
 </body>
 </html>
