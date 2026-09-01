@@ -1,0 +1,8 @@
+# DM-private working files — never published to the live site.
+# Anything inside dm-private/ is invisible to git, so it cannot be
+# committed to the public repo by accident.
+dm-private/
+
+# Local scratch
+*.local.html
+*.local.json
