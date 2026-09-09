@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Decide Your Own Path — Character Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1209,14 +1210,29 @@ function evalReq(reqStr){
 /* ============ dom ============ */
 const $=id=>document.getElementById(id);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
-const esc=s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const esc=s=>String(s==null?"":s).replace(/[&<>"'`]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[ch]));
+/* security: ids from an imported file are interpolated into HTML attributes */
+const SAFE_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const safeParse = txt => JSON.parse(txt, (k,v) => (k==="__proto__"||k==="constructor") ? undefined : v);
 
 /* ============ persistence ============ */
 const LS="dyop_character_v2";
 const save=()=>{try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}};
 function migrate(){
+  /* security: regenerate any id that is not our own uid() shape; coerce names to strings */
+  const fixId=o=>{ if(o&&typeof o==="object"&&!SAFE_ID.test(String(o.id||""))) o.id=uid(); return o; };
+  if(Array.isArray(S.inv)) S.inv.forEach(i=>{ fixId(i); if(i) i.name=String(i.name==null?"":i.name); });
+  if(Array.isArray(S.items)) S.items.forEach(it=>{ fixId(it); if(it){ it.name=String(it.name==null?"":it.name);
+    if(Array.isArray(it.actions)) it.actions.forEach(fixId); } });
+  if(Array.isArray(S.savedRolls)) S.savedRolls.forEach(fixId);
+  if(Array.isArray(S.items)) S.items.forEach(it=>{ if(!it) return;
+    it.rarity = RARITIES.includes(it.rarity) ? it.rarity : "Common";
+    it.base = /^(weapon|armor|shield|accessory|misc):/.test(String(it.base||"")) ? String(it.base) : "";
+  });
   if(Array.isArray(S.skills)){ const mp={}; S.skills.forEach(n=>mp[n]=1); S.skills=mp; }
   if(!S.skills || typeof S.skills!=="object") S.skills={};
+  for(const k of Object.keys(S.skills)){ const v=Math.round(Number(S.skills[k]));
+    if(!(v>=1&&v<=3)) delete S.skills[k]; else S.skills[k]=v; }
   // Crafting was split into 5 crafts — carry an old Crafting proficiency over to Smithing
   if(S.skills.Crafting!=null){ S.skills.Smithing=Math.max(S.skills.Smithing||0,S.skills.Crafting); delete S.skills.Crafting; }
   // HP dice model: S.hpDice is an array of per-die rolls (index 0 = max), or null for range mode
@@ -1262,7 +1278,7 @@ function migrate(){
     sk.level=0;
   }
 }
-function load(){ try{const r=localStorage.getItem(LS)||localStorage.getItem("dyop_character_v1"); if(r){Object.assign(S,JSON.parse(r));migrate();}}catch(e){} }
+function load(){ try{const r=localStorage.getItem(LS)||localStorage.getItem("dyop_character_v1"); if(r){Object.assign(S,safeParse(r));migrate();}}catch(e){} }
 
 /* ============ render: masthead / attrs / skills ============ */
 function renderMasthead(){
@@ -1308,7 +1324,7 @@ function renderSkills(){
     const okM = tier>=3 || (tier>=2 && mU<mA);
     const pip=(T,ok)=>`<button class="pip p${T}${tier>=T?' on':''}${ok?'':' dim'}" data-skill="${esc(name)}" data-tier="${T}" title="${TIER_NAME[T]}">${TIER_NAME[T][0]}</button>`;
     const row=el("div","skill-row"+(tier?` prof t${tier}`:""));
-    row.innerHTML=`<span class="sk-name">${name} <span class="ab">${ab}</span></span>
+    row.innerHTML=`<span class="sk-name">${esc(name)} <span class="ab">${ab}</span></span>
       <span class="pips">${pip(1,okT)}${pip(2,okE)}${pip(3,okM)}</span>`;
     box.appendChild(row);
   }
@@ -1461,7 +1477,7 @@ function renderSheet(){
   }
   h+=`<div class="stat wide"><div class="k">Saving throws (prof)</div><div class="v" style="font-size:.95rem;font-family:'Spectral',serif">${savesTxt}</div><div class="note">${S.saves.length}/2 chosen</div></div>`;
   const sp=Object.entries(S.skills).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-  const tierTxt=sp.length?sp.map(([n,t])=>`${n} <em class="tdetail">${TIER_NAME[t][0]}</em>`).join(" · "):"—";
+  const tierTxt=sp.length?sp.map(([n,t])=>`${esc(n)} <em class="tdetail">${(TIER_NAME[t]||"?")[0]}</em>`).join(" · "):"—";
   h+=`<div class="stat wide"><div class="k">Skill proficiencies</div><div class="v" style="font-size:.9rem;font-family:'Spectral',serif;line-height:1.5">${tierTxt}</div><div class="note">T Trained · E Expert · M Master</div></div>`;
   const ac=armorAC(), eqA=equippedArmor(), eqS=equippedShield();
   const accAC=accessoryACBonus(), itAC=itemsACBonus(), dex=mod(S.attr.DEX);
@@ -1497,7 +1513,7 @@ function renderSheet(){
       else if(d.choices&&d.choices.length) detail=d.choices.join(", ");
       else if(m.kind==="leveled"||m.kind==="count") detail=`Lv ${d.level}`;
       const row=el("div","taken-row"+(bad?" bad":""));
-      row.innerHTML=`<span class="tl" title="${esc(name)}${detail?' — '+esc(detail):''}">${name}${detail?` <em class="tdetail">${esc(detail)}</em>`:''}</span><span class="tr">${bad?'req! ':''}${cost}p</span>`;
+      row.innerHTML=`<span class="tl" title="${esc(name)}${detail?' — '+esc(detail):''}">${esc(name)}${detail?` <em class="tdetail">${esc(detail)}</em>`:''}</span><span class="tr">${bad?'req! ':''}${cost}p</span>`;
       tl.appendChild(row);
     });
   }
@@ -1838,7 +1854,7 @@ function invSectionHTML(){
         : kind==="shield" ? (()=>{const s=SHIELDS.find(x=>x.n===it.name);return s?`${shieldAC(s.bonus)} · ${s.note}`:'';})()
         : (()=>{const wp=WEAPONS.find(x=>x.name===it.name);return wp?`${wp.dmg} ${wp.type} · ${wp.mastery}${weaponProficient(wp)?' · <span class="pf-badge">proficient</span>':' · <span class="npf-badge">not proficient</span>'}`:'';})();
       H+=`<div class="inv-item${it.worn?' worn':''}">
-        <div class="inv-main"><div class="inv-name">${it.name}</div><div class="inv-meta">${meta}</div>${durBar(it)}</div>
+        <div class="inv-main"><div class="inv-name">${esc(it.name)}</div><div class="inv-meta">${meta}</div>${durBar(it)}</div>
         <div class="inv-btns"><button class="wear-btn${it.worn?' on':''}" data-wear="${it.id}">${it.worn?verb:(kind==="weapon"?"wield":"wear")}</button><button class="rm-btn" data-invremove="${it.id}">Remove</button></div>
       </div>`;
     }
@@ -1852,7 +1868,7 @@ function invSectionHTML(){
       const a=ACCESSORIES.find(x=>x.n===it.name);
       const meta=a?`${a.slot}${a.ac>0?` · +${a.ac} AC when worn`:''} · ${a.note}`:'';
       H+=`<div class="inv-item${it.worn?' worn':''}">
-        <div class="inv-main"><div class="inv-name">${it.name}</div><div class="inv-meta">${meta}</div>${it.dur?durBar(it):''}</div>
+        <div class="inv-main"><div class="inv-name">${esc(it.name)}</div><div class="inv-meta">${meta}</div>${it.dur?durBar(it):''}</div>
         <div class="inv-btns"><button class="wear-btn${it.worn?' on':''}" data-wear="${it.id}">${it.worn?'worn':'wear'}</button><button class="rm-btn" data-invremove="${it.id}">Remove</button></div>
       </div>`;
     }
@@ -1865,7 +1881,7 @@ function invSectionHTML(){
     for(const it of [...misc].sort((a,b)=>a.name.localeCompare(b.name))){
       const m=MISC.find(x=>x.n===it.name); const meta=m?`${m.cat} · ${m.note}`:'';
       H+=`<div class="inv-item">
-        <div class="inv-main"><div class="inv-name">${it.name}</div><div class="inv-meta">${meta}</div></div>
+        <div class="inv-main"><div class="inv-name">${esc(it.name)}</div><div class="inv-meta">${meta}</div></div>
         <div class="inv-btns qty">
           <button class="pool-btn" data-qtyadj="${it.id}|-1">−</button>
           <span class="qty-n">${it.qty||1}</span>
@@ -1886,7 +1902,7 @@ function magicalItemsGroupHTML(){
   if(!items.length && !invItemEditOpen) return "";
   let H=`<div class="inv-group"><div class="inv-glabel">Magical Items</div>`;
   for(const it of items){
-    const bits=[]; if(it.base)bits.push(itemBaseLabel(it.base)); if(it.rarity)bits.push(it.rarity); { const eac=itemAC(it); if(eac)bits.push(`+${eac} AC`); const ed=itemDamageStr(it); if(ed)bits.push(`⚔ ${esc(ed)}`); }
+    const bits=[]; if(it.base)bits.push(esc(itemBaseLabel(it.base))); if(it.rarity)bits.push(esc(it.rarity)); { const eac=itemAC(it); if(eac)bits.push(`+${eac} AC`); const ed=itemDamageStr(it); if(ed)bits.push(`⚔ ${esc(ed)}`); }
     const hasActs=it.actions&&it.actions.length, open=sheetItemUse[it.id];
     let optsBar="";
     if(open&&hasActs){
@@ -1937,7 +1953,7 @@ function durSectionHTML(){
     if(isMagic){ const ac=itemAC(it), db=+it.durBonus||0, mp=[]; if(ac)mp.push(`+${ac} AC`); if(db)mp.push(`+${db} dur`); kindLabel=`magic${mp.length?' · '+mp.join(' · '):''}`; }
     else kindLabel=`${it.kind}${it.worn?' · '+(it.kind==="weapon"?"wielded":"worn"):''}`;
     H+=`<div class="dur-item${broke?' broke':''}">
-      <div class="dur-info"><div class="dur-name">${it.name} <span class="dur-kind">${kindLabel} · ${craft} ${cb>=0?'+':''}${cb}</span></div>${durBar(it)}</div>
+      <div class="dur-info"><div class="dur-name">${esc(it.name)} <span class="dur-kind">${kindLabel} · ${craft} ${cb>=0?'+':''}${cb}</span></div>${durBar(it)}</div>
       <div class="dur-ctrls">
         <button class="pool-btn" data-duradj="${it.id}|-1" ${it.dur.cur<=0?'disabled':''}>−</button>
         <input class="dur-in" type="number" min="0" max="${it.dur.max}" value="${it.dur.cur}" data-durset="${it.id}">
@@ -2249,10 +2265,10 @@ function renderSheetView(){
     sk.forEach(([n,t])=>{
       const ab=(SKILLS.find(s=>s[0]===n)||[])[1]||"";
       const abMod=mod(S.attr[ab]||6), profContrib=t>=2?2*pb:pb, total=abMod+profContrib;
-      const tierLabel=TIER_NAME[t].toLowerCase(), cls=t>=3?'m':t>=2?'e':'';
+      const tierLabel=(TIER_NAME[t]||"?").toLowerCase(), cls=t>=3?'m':t>=2?'e':'';
       const floorTip=t>=3?` title="Master: any roll below ${pb+mod(S.attr.INT)} (prof + Int) counts as that minimum"`:'';
       H+=`<div class="sv-line"${floorTip}>
-        <span>${n} <span class="ab" style="color:var(--muted);font-size:.7rem">${ab}</span> <span class="tier ${cls}">${tierLabel}</span></span>
+        <span>${esc(n)} <span class="ab" style="color:var(--muted);font-size:.7rem">${ab}</span> <span class="tier ${cls}">${tierLabel}</span></span>
         <span class="skbonus"><b>${sgn(total)}</b> <span class="brk">(${sgn(profContrib)} ${tierLabel}, ${sgn(abMod)} ${ab.toLowerCase()})</span></span>
       </div>`;
     });
@@ -2281,7 +2297,7 @@ function renderSheetView(){
     }
     H+=`<div class="sv-talent${bad?' bad':''}${sheetOpen[n]?' open':''}${sheetUse[n]?' using':''}">
       <div class="sv-thead">
-        <div class="sv-tname" data-svtoggle="${esc(n)}">${n}${det?` <span class="sv-tdetail">${esc(det)}</span>`:''}${bad?' <span style="color:var(--rust);font-size:.7rem">req!</span>':''}</div>
+        <div class="sv-tname" data-svtoggle="${esc(n)}">${esc(n)}${det?` <span class="sv-tdetail">${esc(det)}</span>`:''}${bad?' <span style="color:var(--rust);font-size:.7rem">req!</span>':''}</div>
         <div class="sv-tactions">${use?`<button class="use-btn" data-svuse="${esc(n)}" title="Use ability">⚡ Use</button>`:''}<span class="sv-tcost">${cost} pt${cost>1?'s':''}</span><span class="sv-caret" data-svtoggle="${esc(n)}">▶</span></div>
       </div>
       ${sheetUse[n]?useBar:''}
@@ -2333,7 +2349,7 @@ function renderSheetView(){
     <div class="sv-stat"><span class="sk">Weapon prof.</span><span class="sval" style="font-size:.72rem">${profTxt}</span></div>
   </div>`;
   if(wpns.length){ H+=`<div style="margin-top:8px"><div class="gl" style="font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:4px">Wielded weapons</div>`;
-    wpns.forEach(it=>{ const w=WEAPONS.find(x=>x.name===it.name); H+=`<div class="sv-line"><span>${it.name}${it.dur.cur<=0?' <span style="color:var(--rust);font-size:.7rem">broken</span>':''} <span class="ab">${w?w.dmg+' '+w.type:''}</span>${itemDmgStr?` <span class="dmgbonus">✦ ${esc(itemDmgStr)}</span>`:''}</span><span class="skbonus"><b>${it.dur.cur}/${it.dur.max}</b> <span class="brk">dur</span></span></div>`; });
+    wpns.forEach(it=>{ const w=WEAPONS.find(x=>x.name===it.name); H+=`<div class="sv-line"><span>${esc(it.name)}${it.dur.cur<=0?' <span style="color:var(--rust);font-size:.7rem">broken</span>':''} <span class="ab">${w?w.dmg+' '+w.type:''}</span>${itemDmgStr?` <span class="dmgbonus">✦ ${esc(itemDmgStr)}</span>`:''}</span><span class="skbonus"><b>${it.dur.cur}/${it.dur.max}</b> <span class="brk">dur</span></span></div>`; });
     H+=`</div>`; }
   if(magicWpns.length){ H+=`<div style="margin-top:8px"><div class="gl" style="font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:4px">Magic weapons</div>`;
     magicWpns.forEach(it=>{ const dmg=itemDamageStr(it); const broken=it.dur&&it.dur.cur<=0; const durTxt=it.dur?`<span class="skbonus"><b>${it.dur.cur}/${it.dur.max}</b> <span class="brk">dur</span></span>`:''; H+=`<div class="sv-line"><span>${esc(it.name||"Magic weapon")}${broken?' <span style="color:var(--rust);font-size:.7rem">broken</span>':''} <span class="ab">${esc(dmg)}</span></span>${durTxt}</div>`; });
@@ -2478,7 +2494,7 @@ function draftEditorHTML(){
   return H;
 }
 function savedCardHTML(it){
-  const bits=[]; if(it.base)bits.push(itemBaseLabel(it.base)); if(it.rarity)bits.push(it.rarity); { const eac=itemAC(it); if(eac)bits.push(`+${eac} AC`); const ed=itemDamageStr(it); if(ed)bits.push(`⚔ ${esc(ed)}`); }
+  const bits=[]; if(it.base)bits.push(esc(itemBaseLabel(it.base))); if(it.rarity)bits.push(esc(it.rarity)); { const eac=itemAC(it); if(eac)bits.push(`+${eac} AC`); const ed=itemDamageStr(it); if(ed)bits.push(`⚔ ${esc(ed)}`); }
   const acts=(it.actions||[]).map(a=>`<span class="mic-act">${esc(a.name||"action")}${a.ctype==="mana"?` · ${a.amount} mana`:a.ctype==="tp"?` · ${a.amount} TP`:" · free"}</span>`).join("");
   return `<div class="mi-card">
     <div class="mic-head"><span class="mic-name">${esc(it.name||"Unnamed item")}</span><span class="mic-meta">${bits.join(" · ")}</span></div>
@@ -2624,7 +2640,7 @@ function printSheet(){
 }
 function importJSON(file){
   const rd=new FileReader();
-  rd.onload=()=>{ try{ Object.assign(S,blankChar(),JSON.parse(rd.result)); migrate(); renderAll(); toast("Character loaded"); }catch(e){ toast("Could not read that file"); } };
+  rd.onload=()=>{ try{ Object.assign(S,blankChar(),safeParse(rd.result)); migrate(); renderAll(); toast("Character loaded"); }catch(e){ toast("Could not read that file"); } };
   rd.readAsText(file);
 }
 function resetChar(){ if(!confirm("Clear this character and start over?"))return; Object.assign(S,blankChar()); renderAll(); toast("Reset"); }
