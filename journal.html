@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Decide Your Own Path — Adventure Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,7 +168,13 @@ input,textarea{font-family:inherit}
 const LS = "dyop_journal_v1";
 const $ = id => document.getElementById(id);
 const uid = () => Math.random().toString(36).slice(2,9);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
+const SAFE_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const safeParse = txt => JSON.parse(txt, (k,v) => (k==="__proto__"||k==="constructor") ? undefined : v);
+/* security: ids are interpolated into HTML attributes (id="entry-…", data-edit, data-goto) */
+const fixIds = () => ORDER.forEach(c => (J[c]||[]).forEach(n => {
+  if(n && typeof n==="object" && !SAFE_ID.test(String(n.id||""))) n.id = uid();
+}));
 
 const ORDER = ["location","npc","quest","general"];
 const TYPES = {
@@ -215,9 +222,10 @@ let draft = null, draftId = null;
 let pendingDel = null;
 
 function load(){
-  try{ const r = localStorage.getItem(LS); if(r) Object.assign(J, JSON.parse(r)); }catch(e){}
+  try{ const r = localStorage.getItem(LS); if(r) Object.assign(J, safeParse(r)); }catch(e){}
   ORDER.forEach(c=>{ if(!Array.isArray(J[c])) J[c]=[]; });
   if(typeof J.name!=="string") J.name="";
+  fixIds();
 }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(J)); }catch(e){} }
 
@@ -426,10 +434,11 @@ function exportJSON(){
 function importJSON(file){
   const rd=new FileReader();
   rd.onload=()=>{ try{
-    const data=JSON.parse(rd.result);
+    const data=safeParse(rd.result);
     J=blank(); Object.assign(J,data);
     ORDER.forEach(c=>{ if(!Array.isArray(J[c])) J[c]=[]; });
     if(typeof J.name!=="string") J.name="";
+    fixIds();
     draft=null; draftId=null; $("advName").value=J.name;
     save(); render(); toast("Journal loaded");
   }catch(e){ toast("Could not read that file"); } };
