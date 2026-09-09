@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>The Fray — Encounter Control · Decide Your Own Path</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,6 +153,7 @@ input,select,textarea{font-family:inherit}
 .side-badge.ally{color:var(--steel); border-color:#4a5a75}
 .c-sub{font-size:.7rem; color:var(--muted); font-style:italic; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .conds{display:flex; gap:5px; flex-wrap:wrap; margin-top:5px}
+.logline .dim{opacity:.7}
 .cond{font-size:.62rem; background:#2a2033; border:1px solid #4a3c5c; color:#c9b9e0; border-radius:20px; padding:1px 7px; display:inline-flex; align-items:center; gap:5px}
 .cond b{font-weight:400; font-family:"JetBrains Mono",monospace; color:var(--violet); font-size:.58rem}
 .cond .x{cursor:pointer; opacity:.6}
@@ -615,7 +617,22 @@ const GEAR={"armor":{"Gambeson / Aketon":[1,null,"light"],"Quilted Jack":[2,null
 const LS = "dyop_fray_v1";
 const uid = () => Math.random().toString(36).slice(2,9);
 const $ = id => document.getElementById(id);
-const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
+/* security: ids from an imported file are interpolated into HTML attributes */
+const SAFE_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const safeParse = txt => JSON.parse(txt, (k,v) => (k==="__proto__"||k==="constructor") ? undefined : v);
+/* security: log entries are stored as HTML built from escaped inputs, but a restored
+   backup could carry anything — keep a tiny formatting allowlist, drop everything else. */
+const LOG_TAGS = {b:1, i:1, em:1, strong:1, span:1, small:1};
+function cleanLogHTML(h){
+  return String(h==null?"":h).replace(/<[^>]*>/g, tag => {
+    const m = /^<\/?([a-zA-Z][a-zA-Z0-9]*)/.exec(tag);
+    if(!m || !LOG_TAGS[m[1].toLowerCase()]) return "";
+    if(tag[1] === "/") return "</" + m[1].toLowerCase() + ">";
+    const cls = /\sclass="([A-Za-z0-9 _-]{0,40})"/.exec(tag);
+    return "<" + m[1].toLowerCase() + (cls ? ` class="${cls[1]}"` : "") + ">";
+  });
+}
 const mod = s => Math.floor((s-10)/2);
 const sgn = n => (n>=0?"+":"")+n;
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -658,7 +675,7 @@ function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function load(){
   try{
     const raw = localStorage.getItem(LS);
-    if(raw) hydrate(JSON.parse(raw));
+    if(raw) hydrate(safeParse(raw));
   }catch(e){}
 }
 function hydrate(p){
@@ -666,9 +683,11 @@ function hydrate(p){
   S = Object.assign(b, p||{});
   S.cs = Array.isArray(S.cs) ? S.cs.map(fixCombatant).filter(Boolean) : [];
   S.party = Array.isArray(S.party) ? S.party.map(fixParty).filter(Boolean) : [];
-  S.log = Array.isArray(S.log) ? S.log.slice(-300) : [];
+  S.log = Array.isArray(S.log)
+    ? S.log.slice(-300).filter(l=>l&&typeof l==="object").map(l=>({r:num(l.r,1), m:cleanLogHTML(l.m), k:String(l.k||"")}))
+    : [];
   S.savedRolls = Array.isArray(S.savedRolls)
-    ? S.savedRolls.filter(r=>r && r.sides).map(r=>({id:r.id||uid(), name:String(r.name||""), qty:Math.max(1,num(r.qty,1)), sides:num(r.sides,20), mod:num(r.mod,0)}))
+    ? S.savedRolls.filter(r=>r && r.sides).map(r=>({id:SAFE_ID.test(String(r.id||""))?String(r.id):uid(), name:String(r.name||""), qty:Math.max(1,num(r.qty,1)), sides:num(r.sides,20), mod:num(r.mod,0)}))
     : [];
   S.round = Math.max(1, num(S.round,1));
   backfillTpl();
@@ -678,7 +697,7 @@ function hydrate(p){
 function pool(o,dflt){ o = o||{}; return { c: num(o.c, num(o.m,dflt||0)), m: Math.max(0,num(o.m,dflt||0)) }; }
 function fixCombatant(c){
   if(!c || typeof c!=="object") return null;
-  c.id = c.id || uid();
+  c.id = SAFE_ID.test(String(c.id||"")) ? String(c.id) : uid();
   c.side = ["pc","foe","ally"].includes(c.side) ? c.side : "foe";
   c.name = String(c.name||"Unnamed");
   c.g = c.g || (c.side==="pc" ? "🛡" : "⚔");
@@ -697,7 +716,7 @@ function fixCombatant(c){
 }
 function fixParty(p){
   if(!p || typeof p!=="object") return null;
-  p.id = p.id || uid();
+  p.id = SAFE_ID.test(String(p.id||"")) ? String(p.id) : uid();
   p.name = String(p.name||"Unnamed");
   p.ac = num(p.ac,10); p.initMod = num(p.initMod,0);
   p.hp = Math.max(1,num(p.hp,1)); p.tp = Math.max(0,num(p.tp,0)); p.mana = Math.max(0,num(p.mana,0));
@@ -1075,7 +1094,7 @@ function importCharFiles(files){
     const rd = new FileReader();
     rd.onload = ()=>{
       let r=false;
-      try{ r = importCharacter(JSON.parse(rd.result), f.name); }catch(e){ toast(`${f.name} didn't parse`,"err"); }
+      try{ r = importCharacter(safeParse(rd.result), f.name); }catch(e){ toast(`${f.name} didn't parse`,"err"); }
       if(r) names.push(r);
       if(++done===list.length){ renderAll(); if(names.length) toast(`${names.join(", ")} added to the party`); }
     };
@@ -1104,7 +1123,7 @@ function exportJSON(){
 }
 function importJSON(file){
   const rd = new FileReader();
-  rd.onload = ()=>{ try{ hydrate(JSON.parse(rd.result)); renderAll(); toast("Restored"); }catch(e){ toast("That file didn't parse","err"); } };
+  rd.onload = ()=>{ try{ hydrate(safeParse(rd.result)); renderAll(); toast("Restored"); }catch(e){ toast("That file didn't parse","err"); } };
   rd.onerror = ()=> toast("Couldn't read that file","err");
   rd.readAsText(file);
 }
@@ -1443,7 +1462,7 @@ function pickerHTML(){
 function logHTML(){
   if(!S.log.length) return "";
   const lines = S.log.slice(-80).slice().reverse().map(l=>
-    `<div class="logline ${l.k}"><span class="lr">R${l.r}</span><span class="lm">${l.m}</span></div>`).join("");
+    `<div class="logline ${l.k}"><span class="lr">R${l.r}</span><span class="lm">${cleanLogHTML(l.m)}</span></div>`).join("");
   return `<div class="step"><span class="n">Log</span><h2>Combat record</h2>
       <button class="rbtn" id="btnCopyLog" style="margin-left:auto">${svg(ICO.copy)} Copy for the Journal</button>
       <button class="rbtn warn" id="btnClearLog">Clear</button></div>
@@ -1756,7 +1775,7 @@ function rollDice(sides){
     diceRolling = false;
     if(label){                                     // named rolls belong in the combat record
       const modTxt = diceMod ? ` ${diceMod>0?"+":"−"}${Math.abs(diceMod)}` : "";
-      logit(`${esc(label)} — <b class="n">${total}</b> <span style="opacity:.7">(${diceQty}d${sides}${modTxt}: ${rolls.join(", ")})</span>`
+      logit(`${esc(label)} — <b class="n">${total}</b> <span class="dim">(${diceQty}d${sides}${modTxt}: ${rolls.join(", ")})</span>`
             + (crits?" ✦ critical!":""), crits?"heal":"");
       save();
       if(S.view==="encounter") renderEncounter();
