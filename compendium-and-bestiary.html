@@ -61186,7 +61186,7 @@ renderFilter(); renderRoster(); renderMain();
   }
   document.addEventListener("click",function(e){var t=e.target.closest(".secnav-tab"); if(t){e.preventDefault(); show(t.dataset.section);}});
   var start=""; try{ start=(location.hash||"").replace("#",""); }catch(_){}
-  if(secs[start]) show(start);
+  if(Object.prototype.hasOwnProperty.call(secs, start)) show(start);
 })();
 </script>
 <div class="lvlpanel" id="lvlpanel">
