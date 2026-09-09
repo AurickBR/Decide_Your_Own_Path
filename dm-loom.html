@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>The Loom — DM Forge & Codex · Decide Your Own Path</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -226,7 +227,9 @@ const LS_OLD = "dyop_dm_forge_v2";
 const CLAUDE_URL = "https://claude.ai/new?q=";
 const uid = () => Math.random().toString(36).slice(2,9);
 const $ = id => document.getElementById(id);
-function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c])); }
+const SAFE_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const safeParse = txt => JSON.parse(txt, (k,v) => (k==="__proto__"||k==="constructor") ? undefined : v);
 
 /* ---- option lists ---- */
 const OPT = {
@@ -302,10 +305,10 @@ function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function load(){
   try{
     let raw=localStorage.getItem(LS);
-    if(raw){ hydrate(JSON.parse(raw)); return; }
+    if(raw){ hydrate(safeParse(raw)); return; }
     // migrate forge-only v2
     let old=localStorage.getItem(LS_OLD);
-    if(old){ const p=JSON.parse(old); const b=blank(); Object.assign(b,p); b.d=mergeD(p.d); b.view="forge"; b.codex={cat:"all",entries:[]}; S=b; }
+    if(old){ const p=safeParse(old); const b=blank(); Object.assign(b,p); b.d=mergeD(p.d); b.view="forge"; b.codex={cat:"all",entries:[]}; S=b; }
   }catch(e){}
 }
 function mergeD(pd){ const bd=blank().d; const out=Object.assign(bd, pd||{}); for(const k in blank().d){ out[k]=Object.assign(blank().d[k], (pd||{})[k]||{}); } return out; }
@@ -314,6 +317,14 @@ function hydrate(p){
   S.d=mergeD(p.d);
   S.codex=Object.assign({cat:"all",entries:[]}, p.codex||{});
   S.codex.entries=Array.isArray(S.codex.entries)?S.codex.entries:[];
+  /* security: ids go into HTML attributes; text fields into markup */
+  S.codex.entries=S.codex.entries.filter(e=>e&&typeof e==="object");
+  S.codex.entries.forEach(e=>{
+    if(!SAFE_ID.test(String(e.id||""))) e.id=uid();
+    e.title=String(e.title==null?"":e.title);
+    e.summary=String(e.summary==null?"":e.summary);
+    e.body=String(e.body==null?"":e.body);
+  });
 }
 
 /* ---- clipboard / toast ---- */
@@ -755,7 +766,7 @@ function exportJSON(){
 }
 function importJSON(file){
   const rd=new FileReader();
-  rd.onload=()=>{ try{ hydrate(JSON.parse(rd.result)); draft=null; draftId=null; renderAll(); toast("Restored"); }catch(e){ toast("That file didn't parse","err"); } };
+  rd.onload=()=>{ try{ hydrate(safeParse(rd.result)); draft=null; draftId=null; renderAll(); toast("Restored"); }catch(e){ toast("That file didn't parse","err"); } };
   rd.onerror=()=>toast("Couldn't read that file","err");
   rd.readAsText(file);
 }
