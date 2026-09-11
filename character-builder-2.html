@@ -792,6 +792,44 @@ input,select{font-family:inherit}
   .dice-picker{grid-template-columns:repeat(4,1fr)}
 }
 @media print{ .dice-fab,.dice-tray,.dice-overlay,.crit-flash{display:none !important} }
+
+/* ---- attack resolution panel (the house rule: damage roll IS the attack) ---- */
+.atkp-btn{background:var(--raised); border:1px solid var(--line-solid); color:var(--ink); border-radius:8px; padding:5px 11px; font-size:.74rem; transition:.12s}
+.atkp-btn:hover{border-color:var(--gold); color:var(--gold)}
+.atkp-btn.on{border-color:var(--gold); background:#241f16; color:var(--bone)}
+.inv-item.atkp-open{flex-wrap:wrap}
+.atkp{flex:1 0 100%; margin:10px 0 2px; background:#0f111a; border:1px solid var(--verd-deep); border-radius:11px; padding:11px 12px}
+.atkp-lbl{font-size:.54rem; text-transform:uppercase; letter-spacing:.15em; color:var(--muted); font-family:"JetBrains Mono",monospace; margin-bottom:6px; display:block}
+.atkp-lbl .hint{text-transform:none; letter-spacing:0; font-style:italic; color:#6b7186; font-family:"Spectral",serif; font-size:.7rem; margin-left:7px}
+.atkp-fields{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
+.atkp-f{display:flex; flex-direction:column; gap:4px}
+.atkp-f input{background:var(--raised); border:1px solid var(--line-solid); color:var(--bone); border-radius:7px; padding:6px 9px; font-size:.84rem; font-family:"JetBrains Mono",monospace}
+.atkp-f input:focus{outline:1px solid var(--verd-deep)}
+.atkp-f.ac input,.atkp-f.bonus input{width:74px; text-align:center}
+.atkp-f.rider input{width:170px; font-family:inherit}
+.atkp-roll{margin-left:auto; background:var(--verd-deep); border:1px solid var(--verd); color:#eafff6; border-radius:9px; padding:8px 16px; font-size:.86rem}
+.atkp-roll:hover{background:#4a9d82}
+.atkp-close{background:transparent; border:1px solid var(--line-solid); color:var(--muted); border-radius:8px; padding:7px 11px; font-size:.76rem}
+.atkp-close:hover{color:var(--bone); border-color:var(--rust)}
+.atkp-out{border-top:1px solid var(--line-solid); padding-top:10px; margin-top:11px}
+.atkp-chains{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:9px; align-items:center}
+.atkp-chain{display:inline-flex; align-items:center; gap:3px}
+.atkp-cd{min-width:28px; height:28px; padding:0 5px; border-radius:7px; background:var(--raised); border:1px solid var(--line-solid); color:var(--bone); font-family:"JetBrains Mono",monospace; font-size:.84rem; display:inline-flex; align-items:center; justify-content:center}
+.atkp-cd.boom{color:#1a1206; border-color:var(--gold); background:linear-gradient(145deg,#f4d79a,var(--gold)); font-weight:700; box-shadow:0 0 0 1px var(--gold), 0 0 14px -3px var(--gold)}
+.atkp-plus{color:var(--gold); font-size:.7rem; font-family:"JetBrains Mono",monospace}
+.atkp-csum{font-family:"JetBrains Mono",monospace; font-size:.66rem; color:var(--gold); margin-left:2px}
+.atkp-chain.rider .atkp-cd{background:#1d2333; border-color:#3a4560; color:#a8c4e2}
+.atkp-math{font-family:"JetBrains Mono",monospace; font-size:.74rem; color:var(--muted); line-height:1.7; margin-bottom:9px}
+.atkp-math b{color:var(--bone); font-weight:400}
+.atkp-verdict{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.atkp-dmg{font-family:"IM Fell English",serif; font-size:2.1rem; line-height:1; color:#e8a49d}
+.atkp-dmg.miss{color:var(--muted); font-size:1.5rem}
+.atkp-dmg small{font-family:"JetBrains Mono",monospace; font-size:.58rem; color:var(--muted); display:block; letter-spacing:.14em; text-transform:uppercase; margin-top:3px}
+.atkp-tag{font-size:.56rem; text-transform:uppercase; letter-spacing:.14em; font-family:"JetBrains Mono",monospace; border-radius:20px; padding:3px 10px; border:1px solid}
+.atkp-tag.hit{color:#1a1206; background:var(--gold); border-color:var(--gold)}
+.atkp-tag.miss{color:var(--muted); border-color:var(--line-solid)}
+.atkp-tag.crit{color:var(--gold); border-color:var(--gold); background:#d3b48318}
+@media print{.atkp,.atkp-btn{display:none !important}}
 </style>
 </head>
 <body>
@@ -1853,9 +1891,12 @@ function invSectionHTML(){
       const meta = kind==="armor" ? (()=>{const a=ARMORS.find(x=>x.n===it.name);return a?`AC ${a.ac} · ${a.cat} · Dex cap ${a.maxDex==null?'∞':a.maxDex}${armorProficient(a)?' · <span class="pf-badge">proficient</span>':' · <span class="npf-badge">not proficient</span>'}`:'';})()
         : kind==="shield" ? (()=>{const s=SHIELDS.find(x=>x.n===it.name);return s?`${shieldAC(s.bonus)} · ${s.note}`:'';})()
         : (()=>{const wp=WEAPONS.find(x=>x.name===it.name);return wp?`${wp.dmg} ${wp.type} · ${wp.mastery}${weaponProficient(wp)?' · <span class="pf-badge">proficient</span>':' · <span class="npf-badge">not proficient</span>'}`:'';})();
-      H+=`<div class="inv-item${it.worn?' worn':''}">
+      const canAtk = kind==="weapon" && it.worn && !!WEAPONS.find(x=>x.name===it.name);
+      const atkPanel = canAtk ? atkPanelHTML(it) : "";
+      H+=`<div class="inv-item${it.worn?' worn':''}${atkPanel?' atkp-open':''}">
         <div class="inv-main"><div class="inv-name">${esc(it.name)}</div><div class="inv-meta">${meta}</div>${durBar(it)}</div>
-        <div class="inv-btns"><button class="wear-btn${it.worn?' on':''}" data-wear="${it.id}">${it.worn?verb:(kind==="weapon"?"wield":"wear")}</button><button class="rm-btn" data-invremove="${it.id}">Remove</button></div>
+        <div class="inv-btns">${canAtk?`<button class="atkp-btn${atk&&atk.invId===it.id?' on':''}" data-atkopen="${it.id}" title="Roll this weapon's damage as an attack">⚔ attack</button>`:""}<button class="wear-btn${it.worn?' on':''}" data-wear="${it.id}">${it.worn?verb:(kind==="weapon"?"wield":"wear")}</button><button class="rm-btn" data-invremove="${it.id}">Remove</button></div>
+        ${atkPanel}
       </div>`;
     }
     H+=`</div>`;
@@ -2698,6 +2739,9 @@ function wire(){
   $("viewToggle").addEventListener("click",e=>{ const b=e.target.closest("[data-view]"); if(b)setView(b.dataset.view); });
   $("buildTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-sub]"); if(b)setSub(b.dataset.sub); });
   $("sheetView").addEventListener("click",e=>{
+    const ao=e.target.closest("[data-atkopen]"); if(ao){ openAtk(ao.dataset.atkopen); return; }
+    if(e.target.closest("[data-atkroll]")){ resolveAttack(); return; }
+    if(e.target.closest("[data-atkclose]")){ closeAtk(); return; }
     const st=e.target.closest("[data-sheetsec]"); if(st){ UI.sheetSec=st.dataset.sheetsec; renderSheetView(); return; }
     if(e.target.id==="svPrint"){ printSheet(); return; }
     if(e.target.id==="svRest"){ restOpen?closeRest():openRest(); return; }
@@ -2751,6 +2795,11 @@ function wire(){
     if(tog){ const n=tog.dataset.svtoggle; sheetOpen[n]=!sheetOpen[n]; const card=tog.closest(".sv-talent"); if(card)card.classList.toggle("open"); }
   });
   $("sheetView").addEventListener("input",e=>{
+    if(atk){
+      const aa=e.target.closest("[data-atkac]");     if(aa){ atk.ac=aa.value; return; }
+      const ab=e.target.closest("[data-atkbonus]");  if(ab){ atk.bonus=ab.value; return; }
+      const ar=e.target.closest("[data-atkrider]");  if(ar){ atk.rider=ar.value; return; }
+    }
     const df=e.target.closest("[data-dfield]"); if(df){ setDraftField(df.dataset.dfield,e.target.value); return; }
     const da=e.target.closest("[data-daction]"); if(da){ setDraftActionField(da.dataset.daction,da.dataset.dafield,e.target.value); return; }
   });
@@ -2910,6 +2959,163 @@ function wireDice(){
     if(e.key==="r"||e.key==="R"){ diceToggle(true); }
     else if(e.key==="Escape" && diceOpen){ diceToggle(false); }
   });
+}
+
+
+/* ============ attack resolution — the house rule ============
+   See claude/ATTACK_RULE.md. There is no separate to-hit roll: the damage roll IS the attack.
+   Each weapon die explodes independently on its own maximum; flat bonuses are added; the
+   target's Armor Class is subtracted as damage reduction. 1 or more through is a hit. Dice
+   riding on the weapon are rolled only once the blow lands, and never explode.
+   Same maths as encounter-control.html so both sides of the screen agree. */
+const ATK_EXPLODE_CAP = 30;                       /* guard; play never reaches it */
+const atkClamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const atkNum = (v,d) => { const n=parseInt(v,10); return isNaN(n)?(d||0):n; };
+
+function explodeDie(sides){
+  if(sides < 2) return [rollDie(Math.max(1,sides))];
+  const chain=[]; let v;
+  do{ v=rollDie(sides); chain.push(v); }while(v===sides && chain.length<ATK_EXPLODE_CAP);
+  return chain;
+}
+function rollExploding(qty,sides){
+  const out=[];
+  for(let i=0;i<atkClamp(atkNum(qty,1),1,40);i++) out.push(explodeDie(sides));
+  return out;
+}
+const chainSum = ch => ch.reduce((a,b)=>a+b,0);
+
+/* "1d8", "2d4 +1 necrotic" -> {qty,sides,mod} */
+function parseDmg(str){
+  const m=String(str||"").match(/(\d+)\s*d\s*(\d+)/i);
+  if(!m) return null;
+  const rest=String(str).slice(m.index+m[0].length);
+  const mm=rest.match(/([+-])\s*(\d+)/);
+  return { qty:atkClamp(+m[1],1,20), sides:+m[2], mod: mm ? (mm[1]==="-" ? -(+mm[2]) : +mm[2]) : 0 };
+}
+function parseRider(str){
+  const p=parseDmg(str); if(!p) return null;
+  const type=(String(str||"").match(/([A-Za-z]{3,})\s*$/)||[])[1] || "";
+  return {qty:p.qty, sides:p.sides, mod:p.mod, type: /^d\d+$/i.test(type) ? "" : type};
+}
+
+/* Which attribute rides on a weapon: Dex for ranged, the better of the two for Finesse,
+   Strength otherwise. Proficiency is not part of the damage total in this system. */
+function weaponAbility(wp){
+  if(!wp) return "STR";
+  if(/Finesse/i.test(String(wp.props||""))) return mod(S.attr.DEX) >= mod(S.attr.STR) ? "DEX" : "STR";
+  return /Ranged/i.test(String(wp.cat||"")) ? "DEX" : "STR";
+}
+const weaponAtkBonus = wp => mod(S.attr[weaponAbility(wp)]);
+
+/* transient — never persisted, same as the rest of UI state */
+let atk = null;   /* {invId, ac, bonus, rider, result} */
+
+function atkItem(){ return atk ? (S.inv||[]).find(x=>x.id===atk.invId) : null; }
+function openAtk(invId){
+  if(atk && atk.invId===invId){ atk=null; renderSheetView(); return; }
+  const it=(S.inv||[]).find(x=>x.id===invId); if(!it) return;
+  const wp=WEAPONS.find(w=>w.name===it.name);
+  atk={ invId, ac: atk?atk.ac:"", bonus: weaponAtkBonus(wp), rider:"", result:null };
+  renderSheetView();
+}
+function closeAtk(){ atk=null; renderSheetView(); }
+
+function resolveAttack(){
+  const it=atkItem(); if(!it) return;
+  const wp=WEAPONS.find(w=>w.name===it.name);
+  const dice=parseDmg(wp?wp.dmg:"");
+  if(!dice){ toast(`${it.name} has no damage dice to roll`,"error"); return; }
+
+  const chains=rollExploding(dice.qty,dice.sides);
+  const base=chains.reduce((t,ch)=>t+chainSum(ch),0);
+  const bonus=atkNum(atk.bonus,0);
+  const total=base+bonus;
+  const crits=chains.filter(ch=>ch.length>1).length;
+  const deepest=chains.reduce((m,ch)=>Math.max(m,ch.length),1);
+
+  const acRaw=String(atk.ac==null?"":atk.ac).trim();
+  const hasTarget = acRaw!=="" && !isNaN(parseInt(acRaw,10));
+  let ac=null, hit=null, dealt=null, rider=null;
+  if(hasTarget){
+    ac=atkNum(acRaw,0);
+    const through=total-ac;
+    hit=through>=1;
+    dealt=Math.max(0,through);
+    if(hit){
+      const r=parseRider(atk.rider);
+      if(r){
+        const rolls=[];
+        for(let i=0;i<atkClamp(r.qty,1,40);i++) rolls.push(rollDie(r.sides));   /* riders never explode */
+        const sum=rolls.reduce((x,y)=>x+y,0)+r.mod;
+        rider={rolls, mod:r.mod, sum, sides:r.sides, type:r.type};
+        dealt+=sum;
+      }
+    }
+  }
+  atk.result={chains,base,bonus,total,crits,deepest,qty:dice.qty,sides:dice.sides,ac,hit,dealt,rider};
+
+  /* the dice tray's history keeps a line for every attack too */
+  diceLog.unshift({sides:dice.sides, rolls:chains.map(chainSum), total, mod:bonus, crits});
+  if(diceLog.length>24) diceLog.pop();
+  if($("diceLog")) renderDiceLog();
+
+  renderSheetView();
+  if(deepest>=3) fireCrit(crits,dice.sides);
+}
+
+function atkPanelHTML(it){
+  if(!atk || atk.invId!==it.id) return "";
+  const wp=WEAPONS.find(w=>w.name===it.name);
+  const dice=parseDmg(wp?wp.dmg:"");
+  const ab=weaponAbility(wp);
+  const r=atk.result;
+
+  let out="";
+  if(r){
+    const chainsHTML=r.chains.map(ch=>{
+      const d=ch.map(v=>`<span class="atkp-cd${v===r.sides?' boom':''}">${v}</span>`).join(`<span class="atkp-plus">+</span>`);
+      return `<span class="atkp-chain">${d}${ch.length>1?`<span class="atkp-csum">=${chainSum(ch)}</span>`:""}</span>`;
+    }).join("");
+    const riderHTML = r.rider
+      ? `<span class="atkp-chain rider">`+r.rider.rolls.map(v=>`<span class="atkp-cd">${v}</span>`).join(`<span class="atkp-plus">+</span>`)
+        +(r.rider.mod?`<span class="atkp-plus">${r.rider.mod>0?"+":"−"}${Math.abs(r.rider.mod)}</span>`:"")
+        +`<span class="atkp-csum">=${r.rider.sum} ${esc(r.rider.type||"extra")}</span></span>`
+      : "";
+    const bTxt = r.bonus ? ` ${r.bonus>0?"+":"−"} ${Math.abs(r.bonus)}` : "";
+    let math=`<div class="atkp-math">${r.qty}d${r.sides} → <b>${r.base}</b>${bTxt?` bonus${bTxt}`:""} = <b>${r.total}</b>`;
+    if(r.ac!=null){
+      math+=`<br>${r.total} − AC ${r.ac} = <b>${r.total-r.ac}</b>`;
+      if(r.hit && r.rider) math+=` &nbsp;+&nbsp; ${r.rider.sum} ${esc(r.rider.type||"extra")} on the hit = <b>${r.dealt}</b>`;
+    }else{
+      math+=`<br><span>no target Armor Class — enter one to see what gets through</span>`;
+    }
+    math+=`</div>`;
+
+    const verdict = r.ac==null
+      ? `<div class="atkp-verdict"><div class="atkp-dmg">${r.total}<small>rolled</small></div>${r.crits?`<span class="atkp-tag crit">✦ ${r.crits>1?r.crits+"× ":""}critical</span>`:""}</div>`
+      : `<div class="atkp-verdict">
+           <div class="atkp-dmg${r.hit?"":" miss"}">${r.hit?r.dealt:"turned aside"}${r.hit?`<small>damage</small>`:`<small>AC ${r.ac} held</small>`}</div>
+           <span class="atkp-tag ${r.hit?"hit":"miss"}">${r.hit?"hit":"no damage"}</span>
+           ${r.crits?`<span class="atkp-tag crit">✦ ${r.crits>1?r.crits+"× ":""}critical</span>`:""}
+         </div>`;
+    out=`<div class="atkp-out"><div class="atkp-chains">${chainsHTML}${riderHTML}</div>${math}${verdict}</div>`;
+  }
+
+  return `<div class="atkp">
+    <span class="atkp-lbl">Attack <span class="hint">${wp?`${esc(wp.dmg)} ${esc(wp.type)}`:"—"} · bonus from ${ab} · the damage roll is the attack</span></span>
+    <div class="atkp-fields">
+      <div class="atkp-f ac"><span class="atkp-lbl" style="margin:0">Target AC</span>
+        <input data-atkac="1" value="${esc(atk.ac)}" inputmode="numeric" placeholder="—" title="Armor Class is subtracted from the damage total. Leave blank to just roll the dice."></div>
+      <div class="atkp-f bonus"><span class="atkp-lbl" style="margin:0">Bonus</span>
+        <input data-atkbonus="1" value="${esc(atk.bonus)}" inputmode="numeric" title="Attribute modifier and any flat magical bonus"></div>
+      <div class="atkp-f rider"><span class="atkp-lbl" style="margin:0">Dice on a hit</span>
+        <input data-atkrider="1" value="${esc(atk.rider)}" placeholder="e.g. 1d6 fire" title="Extra dice rolled only if the blow lands — these never explode"></div>
+      <button class="atkp-close" data-atkclose="1">Close</button>
+      <button class="atkp-roll" data-atkroll="1">${r?"Roll again":`Roll ${dice?`${dice.qty}d${dice.sides}`:"damage"}`}</button>
+    </div>
+    ${out}
+  </div>`;
 }
 
 /* ============ boot ============ */
