@@ -623,16 +623,6 @@ const SAFE_ID = /^[A-Za-z0-9_-]{1,32}$/;
 const safeParse = txt => JSON.parse(txt, (k,v) => (k==="__proto__"||k==="constructor") ? undefined : v);
 /* security: log entries are stored as HTML built from escaped inputs, but a restored
    backup could carry anything — keep a tiny formatting allowlist, drop everything else. */
-const LOG_TAGS = {b:1, i:1, em:1, strong:1, span:1, small:1};
-function cleanLogHTML(h){
-  return String(h==null?"":h).replace(/<[^>]*>/g, tag => {
-    const m = /^<\/?([a-zA-Z][a-zA-Z0-9]*)/.exec(tag);
-    if(!m || !LOG_TAGS[m[1].toLowerCase()]) return "";
-    if(tag[1] === "/") return "</" + m[1].toLowerCase() + ">";
-    const cls = /\sclass="([A-Za-z0-9 _-]{0,40})"/.exec(tag);
-    return "<" + m[1].toLowerCase() + (cls ? ` class="${cls[1]}"` : "") + ">";
-  });
-}
 const mod = s => Math.floor((s-10)/2);
 const sgn = n => (n>=0?"+":"")+n;
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -684,7 +674,9 @@ function hydrate(p){
   S.cs = Array.isArray(S.cs) ? S.cs.map(fixCombatant).filter(Boolean) : [];
   S.party = Array.isArray(S.party) ? S.party.map(fixParty).filter(Boolean) : [];
   S.log = Array.isArray(S.log)
-    ? S.log.slice(-300).filter(l=>l&&typeof l==="object").map(l=>({r:num(l.r,1), m:cleanLogHTML(l.m), k:String(l.k||"")}))
+    ? S.log.slice(-300).filter(l=>l&&typeof l==="object").map(l=>({r:num(l.r,1),
+        p: Array.isArray(l.p) ? l.p.map(fixPart) : [logStrip(l.m)],   /* legacy {m:html} → plain text */
+        k:String(l.k||"")}))
     : [];
   S.savedRolls = Array.isArray(S.savedRolls)
     ? S.savedRolls.filter(r=>r && r.sides).map(r=>({id:SAFE_ID.test(String(r.id||""))?String(r.id):uid(), name:String(r.name||""), qty:Math.max(1,num(r.qty,1)), sides:num(r.sides,20), mod:num(r.mod,0)}))
@@ -753,10 +745,30 @@ function flashRoll(total, detail){
 /* ============================================================
    Log
    ============================================================ */
-function logit(msg, kind){
-  S.log.push({r:S.round, m:msg, k:kind||""});
+/* The combat record stores DATA, never markup. An entry is {r, p:[parts], k}, where a part is
+   a plain string or one of {b:…} bold, {n:…} number, {dim:…} muted detail. renderParts() is the
+   only place markup is created, and every value there goes through esc(). This is the structural
+   fix for SECURITY_AUDIT.md finding 2: a restored backup can no longer smuggle HTML into the log. */
+function logit(parts, kind){
+  S.log.push({r:S.round, p:Array.isArray(parts)?parts:[String(parts==null?"":parts)], k:kind||""});
   if(S.log.length>300) S.log = S.log.slice(-300);
 }
+const logStrip = h => String(h==null?"":h).replace(/<[^>]*>/g,"")
+  .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,"&");
+const fixPart = x => typeof x==="string" ? x
+  : (x && typeof x==="object")
+      ? (x.b!=null ? {b:String(x.b)} : x.n!=null ? {n:String(x.n)} : x.dim!=null ? {dim:String(x.dim)} : "")
+      : "";
+const renderParts = p => (p||[]).map(x =>
+  typeof x==="string" ? esc(x)
+  : (x && typeof x==="object")
+      ? (x.b!=null ? `<b>${esc(x.b)}</b>`
+       : x.n!=null ? `<b class="n">${esc(x.n)}</b>`
+       : x.dim!=null ? `<span class="dim">${esc(x.dim)}</span>` : "")
+      : "").join("");
+const partsText = p => (p||[]).map(x =>
+  typeof x==="string" ? x
+  : (x && typeof x==="object") ? String(x.b!=null?x.b : x.n!=null?x.n : x.dim!=null?x.dim : "") : "").join("");
 
 /* ============================================================
    Ordering & turns
@@ -845,7 +857,7 @@ function tickConditions(id){
     if(cd.r<=0){ gone.push(cd.n); return false; }
     return true;
   });
-  if(gone.length) logit(`<b>${esc(c.name)}</b> — ${gone.map(esc).join(", ")} ends.`, "");
+  if(gone.length) logit([{b:c.name}, ` — ${gone.join(", ")} ends.`], "");
 }
 function rollInit(onlyEmpty){
   let n=0, lines=[];
@@ -869,24 +881,24 @@ function damage(id, n){
   const before = c.hp.c;
   c.hp.c = clamp(c.hp.c - left, 0, c.hp.m);
   const dealt = before - c.hp.c;
-  logit(`<b>${esc(c.name)}</b> takes <b class="n">${Math.abs(n)}</b> damage`
+  logit([{b:c.name}, " takes ", {n:Math.abs(n)}, " damage"
       + (absorbed?` (${absorbed} soaked by temp HP)`:"")
-      + ` — ${c.hp.c}/${c.hp.m} HP.`, "dmg");
-  if(c.hp.c===0 && before>0){ logit(`<b>${esc(c.name)}</b> falls.`, "dmg"); }
+      + ` — ${c.hp.c}/${c.hp.m} HP.`], "dmg");
+  if(c.hp.c===0 && before>0){ logit([{b:c.name}, " falls."], "dmg"); }
   void dealt;
 }
 function heal(id, n){
   const c = byId(id); if(!c || !n) return;
   const before = c.hp.c;
   c.hp.c = clamp(c.hp.c + Math.abs(n), 0, c.hp.m);
-  logit(`<b>${esc(c.name)}</b> recovers <b class="n">${c.hp.c-before}</b> HP — ${c.hp.c}/${c.hp.m}.`, "heal");
+  logit([{b:c.name}, " recovers ", {n:c.hp.c-before}, ` HP — ${c.hp.c}/${c.hp.m}.`], "heal");
 }
 function grantTemp(id, n){
   const c = byId(id); if(!c || !n) return;
   const v = Math.abs(n);
   if(v <= c.thp){ toast(`${c.name} already has ${c.thp} temp HP — temporary HP doesn't stack`); return; }
   c.thp = v;
-  logit(`<b>${esc(c.name)}</b> gains <b class="n">${v}</b> temporary HP.`, "heal");
+  logit([{b:c.name}, " gains ", {n:v}, " temporary HP."], "heal");
 }
 function adjustPool(id, key, delta){
   const c = byId(id); if(!c) return;
@@ -895,7 +907,7 @@ function adjustPool(id, key, delta){
   const p = c[key]; if(!p) return;
   p.c = clamp(p.c + delta, 0, p.m);
   const label = key==="tp" ? "talent point" : "mana";
-  if(delta<0) logit(`<b>${esc(c.name)}</b> spends ${Math.abs(delta)} ${label}${Math.abs(delta)>1&&key==="tp"?"s":""} — ${p.c}/${p.m}.`, "");
+  if(delta<0) logit([{b:c.name}, ` spends ${Math.abs(delta)} ${label}${Math.abs(delta)>1&&key==="tp"?"s":""} — ${p.c}/${p.m}.`], "");
 }
 
 /* ============================================================
@@ -944,7 +956,7 @@ function addTemplate(idx, qty, side){
   const t = BESTIARY[idx]; if(!t) return;
   const n = clamp(num(qty,1),1,20);
   for(let i=0;i<n;i++) insertCombatant(fromTemplate(t, side));
-  logit(`${n>1?n+"× ":""}<b>${esc(t.n)}</b> joins the fray.`, "");
+  logit([(n>1?n+"× ":""), {b:t.n}, " joins the fray."], "");
   renderAll();
   toast(`${t.n}${n>1?` ×${n}`:""} added`);
 }
@@ -957,7 +969,7 @@ function addPartyMember(pid){
     hp:{c:p.hp,m:p.hp}, thp:0, tp:{c:p.tp,m:p.tp}, mana:{c:p.mana,m:p.mana},
     cond:[], note:"", blk: p.attr ? {attr:p.attr, atk:[], tr:[], senses:"", note:p.note||"", pb:p.pb||0, sp:"", sec:"Party"} : null
   });
-  logit(`<b>${esc(p.name)}</b> joins the fray.`, "");
+  logit([{b:p.name}, " joins the fray."], "");
   renderAll(); toast(`${p.name} added`);
 }
 function addWholeParty(){
@@ -984,7 +996,7 @@ function addCustom(){
     hp:{c:hp,m:hp}, thp:0, tp:{c:num(c.tp,0),m:num(c.tp,0)}, mana:{c:num(c.mana,0),m:num(c.mana,0)},
     cond:[], note:"", blk:null
   });
-  logit(`<b>${esc(c.name.trim())}</b> joins the fray.`, "");
+  logit([{b:c.name.trim()}, " joins the fray."], "");
   ui.custom = {name:"",ac:12,hp:10,tp:0,mana:0,initMod:0,side:c.side,g:c.g};
   renderAll(); toast("Added");
 }
@@ -996,7 +1008,7 @@ function removeCombatant(id){
   S.cs = S.cs.filter(x=>x.id!==id);
   if(wasActive) S.activeId = S.cs.length ? S.cs[Math.min(i, S.cs.length-1)].id : null;
   if(!S.cs.length){ S.started=false; S.activeId=null; }
-  logit(`<b>${esc(c.name)}</b> leaves the fray.`, "");
+  logit([{b:c.name}, " leaves the fray."], "");
   renderAll();
 }
 function clearFoes(){
@@ -1128,9 +1140,8 @@ function importJSON(file){
   rd.readAsText(file);
 }
 function copyLog(){
-  const strip = h => String(h).replace(/<[^>]*>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"');
   const head = (S.title ? S.title : "Encounter") + "\n\n";
-  const body = S.log.map(l => `R${l.r}  ${strip(l.m)}`).join("\n");
+  const body = S.log.map(l => `R${l.r}  ${partsText(l.p)}`).join("\n");
   copyText(head + body, "Combat log copied — paste it into the Journal");
 }
 
@@ -1462,7 +1473,7 @@ function pickerHTML(){
 function logHTML(){
   if(!S.log.length) return "";
   const lines = S.log.slice(-80).slice().reverse().map(l=>
-    `<div class="logline ${l.k}"><span class="lr">R${l.r}</span><span class="lm">${cleanLogHTML(l.m)}</span></div>`).join("");
+    `<div class="logline ${l.k}"><span class="lr">R${l.r}</span><span class="lm">${renderParts(l.p)}</span></div>`).join("");
   return `<div class="step"><span class="n">Log</span><h2>Combat record</h2>
       <button class="rbtn" id="btnCopyLog" style="margin-left:auto">${svg(ICO.copy)} Copy for the Journal</button>
       <button class="rbtn warn" id="btnClearLog">Clear</button></div>
@@ -1593,8 +1604,8 @@ function wire(){
       const [id,name] = cd.dataset.cond.split("|");
       const c = byId(id); if(!c) return;
       const at = c.cond.findIndex(x=>x.n===name);
-      if(at>-1){ c.cond.splice(at,1); logit(`<b>${esc(c.name)}</b> — ${esc(name)} ends.`,""); }
-      else { c.cond.push({n:name, r:null}); logit(`<b>${esc(c.name)}</b> is ${esc(name)}.`,""); }
+      if(at>-1){ c.cond.splice(at,1); logit([{b:c.name}, ` — ${name} ends.`],""); }
+      else { c.cond.push({n:name, r:null}); logit([{b:c.name}, ` is ${name}.`],""); }
       renderAll(); return;
     }
     const ca = t.closest("[data-condadd]"); if(ca){
@@ -1604,7 +1615,7 @@ function wire(){
       if(!name){ toast("Name the condition first","err"); return; }
       const r = rEl && rEl.value.trim() ? Math.max(1,num(rEl.value,1)) : null;
       c.cond.push({n:name, r});
-      logit(`<b>${esc(c.name)}</b> is ${esc(name)}${r?` (${r} rounds)`:""}.`,"");
+      logit([{b:c.name}, ` is ${name}${r?` (${r} rounds)`:""}.`],"");
       renderAll(); return;
     }
     const ao = t.closest("[data-atkopen]"); if(ao){
@@ -1775,8 +1786,8 @@ function rollDice(sides){
     diceRolling = false;
     if(label){                                     // named rolls belong in the combat record
       const modTxt = diceMod ? ` ${diceMod>0?"+":"−"}${Math.abs(diceMod)}` : "";
-      logit(`${esc(label)} — <b class="n">${total}</b> <span class="dim">(${diceQty}d${sides}${modTxt}: ${rolls.join(", ")})</span>`
-            + (crits?" ✦ critical!":""), crits?"heal":"");
+      logit([`${label} — `, {n:total}, " ", {dim:`(${diceQty}d${sides}${modTxt}: ${rolls.join(", ")})`}]
+            .concat(crits?[" ✦ critical!"]:[]), crits?"heal":"");
       save();
       if(S.view==="encounter") renderEncounter();
     }
@@ -1992,13 +2003,13 @@ function resolveAttack(){
 
   const chainTxt = chains.map(ch=>ch.length>1?ch.join("→"):String(ch[0])).join(", ");
   const bTxt = bonus ? ` ${bonus>0?"+":"−"}${Math.abs(bonus)}` : "";
-  let line = `<b>${esc(c.name)}</b> attacks with ${esc(a.n)} — [${chainTxt}]${bTxt} = <b class="n">${total}</b>`;
+  const line = [{b:c.name}, ` attacks with ${a.n} — [${chainTxt}]${bTxt} = `, {n:total}];
   if(tgt){
-    line += ` vs ${esc(tgt.name)}'s AC ${ac} → `;
-    line += hit ? `<b class="n">${dealt}</b> damage${rider?` (incl. ${rider.sum} ${esc(rider.type||"extra")})`:""}.`
-                : `turned aside.`;
-  }else line += ` (no target).`;
-  if(crits) line += ` ✦ ${crits>1?crits+"× ":""}critical!`;
+    line.push(` vs ${tgt.name}'s AC ${ac} → `);
+    if(hit) line.push({n:dealt}, ` damage${rider?` (incl. ${rider.sum} ${rider.type||"extra"})`:""}.`);
+    else line.push("turned aside.");
+  }else line.push(" (no target).");
+  if(crits) line.push(` ✦ ${crits>1?crits+"× ":""}critical!`);
   logit(line, hit===false ? "" : "dmg");
 
   if(deepest >= 3) fireCrit(deepest-1, dice.sides);   // a chain of three is worth the fanfare
@@ -2091,13 +2102,16 @@ function atkPanelHTML(c, a, ai){
 /* boot */
 load(); renderAll(); wire(); wireDice();
 
-/* test hooks */
+/* Test hooks. Local only: on the published site this object would hand an injected payload a
+   tidy API onto the whole state. The jsdom/Playwright suites run from file:// or localhost. */
+if(location.protocol === "file:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")
 window.__fray = { get S(){return S;}, get ui(){return ui;}, renderAll, displayOrder, byId,
                   rollDice, rollNamed, rollSaved, parseDmg, parseRider, diceToggle, commitSavedRoll,
                   explodeDie, rollExploding, eligibleTargets, inFrayCounts, tplKey, resolveAttack, applyAttack, openAtkPanel, isCharmed,
                   get diceLog(){return diceLog;}, get diceOpen(){return diceOpen;}, get lastRoll(){return lastRoll;}, damage, heal, grantTemp,
                   startEncounter, nextTurn, prevTurn, endEncounter, addTemplate, addCustom, sortCs,
-                  charDerived, importCharacter, BESTIARY, hydrate, blank };
+                  charDerived, importCharacter, BESTIARY, hydrate, blank,
+                  logit, renderParts, partsText, save };
 })();
 </script>
 <!-- ============================================================
