@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Decide Your Own Path — Compendium &amp; Wildlife</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13495,7 +13496,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("c-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Commoner","Martial","Skirmisher","Ranged","Caster","Leader","Social"];
 function archRole(a){
@@ -16723,7 +16724,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("t-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Lesser","Greater","Sovereign"];
 function archRole(a){
@@ -20420,7 +20421,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("q-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Lich","Knight","Sworn","Demilich"];
 function archRole(a){
@@ -23898,7 +23899,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("l-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Archon","Angel","Fallen","Empyrean"];
 function archRole(a){
@@ -27760,7 +27761,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("y-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Lesser","Hag","Unseelie","Archfey"];
 function archRole(a){
@@ -34396,7 +34397,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("e-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Mote","Lesser","Elemental","Greater","Elder","Sovereign","Primordial"];
 function archRole(a){
@@ -36952,7 +36953,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("k-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Animated","Golem","Thinking","Colossus"];
 function archRole(a){
@@ -40326,7 +40327,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("f-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Devil","Demon"];
 function archRole(a){
@@ -43690,7 +43691,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("a-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Formless","Ancient","Tyrant","Illithid"];
 function archRole(a){
@@ -46974,7 +46975,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("r-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Outcast","Caster","Brood","Chosen"];
 function archRole(a){
@@ -50191,7 +50192,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("v-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Spawn","Feral","Noble","Warlord","Caster","Lord"];
 function archRole(a){
@@ -52227,7 +52228,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("s-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Shadow","Stalker","Caster","Ooze"];
 function archRole(a){
@@ -53783,7 +53784,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("z-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Shambler","Armored","Plague","Bloated","Brute","Crawler"];
 function archRole(a){
@@ -55857,7 +55858,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("g-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Skilled","Martial","Ranged","Caster","Leader"];
 function archRole(a){
@@ -56543,7 +56544,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("m-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Wyrmling","Young","Adult","Ancient"];
 function archRole(a){ return a.age || "Young"; }
@@ -57285,7 +57286,7 @@ const MONSTERS=[
 
 /* ============ state & helpers ============ */
 const $ = id => document.getElementById("d-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const UI = {sel:0, arch:0, role:"All", search:"", open:{}, spellLv:null, pane:"general"};
 const ROLES = ["All","Wyrmling","Young","Adult","Ancient"];
 function archRole(a){ return a.age || "Young"; }
@@ -60454,7 +60455,7 @@ function avgHP(a){ const die=DIE[a.size]||8, per=DIEAVG[die]+mod(a.attr.CON); re
 function wildProf(cr){ const c=crNum(cr); const basic=Math.max(2,Math.ceil(Math.max(c,0.0001))*4); const sup=Math.max(2,Math.ceil(Math.max(c,0.0001))*2); return {basic:Math.min(20,basic), sup:Math.min(20,sup)}; }
 
 const $ = id => document.getElementById("x-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const SK = {Acrobatics:"DEX","Animal Handling":"WIS",Arcana:"INT",Athletics:"STR",Deception:"CHA",History:"INT",Insight:"WIS",Intimidation:"CHA",Investigation:"INT",Medicine:"WIS",Nature:"INT",Perception:"WIS",Performance:"CHA",Persuasion:"CHA",Religion:"INT","Sleight of Hand":"DEX",Stealth:"DEX",Survival:"WIS"};
 const ATTR_ORDER = ["STR","DEX","CON","INT","WIS","CHA"];
 const ATTR_FULL = {STR:"Strength",DEX:"Dexterity",CON:"Constitution",INT:"Intelligence",WIS:"Wisdom",CHA:"Charisma"};
@@ -60963,7 +60964,7 @@ function avgHP(a){ const die=DIE[a.size]||8, per=DIEAVG[die]+mod(a.attr.CON); re
 function wildProf(cr){ const c=crNum(cr); const basic=Math.max(2,Math.ceil(Math.max(c,0.0001))*4); const sup=Math.max(2,Math.ceil(Math.max(c,0.0001))*2); return {basic:Math.min(20,basic), sup:Math.min(20,sup)}; }
 
 const $ = id => document.getElementById("b-"+id);
-const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s==null?"":s).replace(/[&<>"'`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"}[c]));
 const SK = {Acrobatics:"DEX","Animal Handling":"WIS",Arcana:"INT",Athletics:"STR",Deception:"CHA",History:"INT",Insight:"WIS",Intimidation:"CHA",Investigation:"INT",Medicine:"WIS",Nature:"INT",Perception:"WIS",Performance:"CHA",Persuasion:"CHA",Religion:"INT","Sleight of Hand":"DEX",Stealth:"DEX",Survival:"WIS"};
 const ATTR_ORDER = ["STR","DEX","CON","INT","WIS","CHA"];
 const ATTR_FULL = {STR:"Strength",DEX:"Dexterity",CON:"Constitution",INT:"Intelligence",WIS:"Wisdom",CHA:"Charisma"};
