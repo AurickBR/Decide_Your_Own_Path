@@ -6,3 +6,8 @@ dm-private/
 # Local scratch
 *.local.html
 *.local.json
+
+# build-tool and test leftovers
+__pycache__/
+*.pyc
+node_modules/
