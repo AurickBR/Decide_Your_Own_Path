@@ -95,10 +95,42 @@ Then verify:
     node test/spells.test.js
     node test/conditions.test.js
     node test/ec-conditions.test.js
+    node test/build-stamp.test.js
 
 `srd_convert.py` turns one spell's Markdown into HTML. Nothing from the source is passed through as
 markup: every scrap of text is escaped first and the only tags in the output are ones the converter
 emits — `p`, `em`, `strong`, `ul`, `li`, `h4`, `table`, `thead`, `tbody`, `tr`, `th`, `td`.
+
+## Build stamps
+
+Every published page carries a footer stamp: the file's name, a build date, and a short SHA-1 of its
+own content with the stamp removed.
+
+    index.html · build 2026-09-13 · 8e98286
+
+**Why a fingerprint and not just a date.** Two copies edited on the same day look identical by date.
+`claude/SECURITY_PATCHES.md` §1 records an entire security patch pass that validated against the
+*wrong* copy of a file, because there was no way to tell two versions apart. The `rev` answers "is
+this the build I think it is?" from the footer — and in bulk:
+
+    python3 tools/stamp_build.py            # stamp every published page
+    python3 tools/stamp_build.py --check    # verify; exits 1 if anything is stale or unstamped
+
+`--check` is the drift detector. It recomputes each file's hash and compares; a single changed
+space is enough to report STALE.
+
+**Ordering matters.** The data builds change file content, so stamp *after* them:
+
+    python3 tools/build_spells.py
+    python3 tools/build_conditions.py
+    python3 tools/stamp_build.py            # last
+
+The stamp tool is idempotent — the hash covers the content *without* the stamp, so re-running
+rewrites the same bytes. The **date only moves when the content actually moves**: a rebuild that
+changes nothing leaves the date alone, so the date means "last really changed", not "last ran".
+
+Stamps are hidden in print and carry `data-build` / `data-rev` attributes for anything that wants to
+read them programmatically.
 
 ## The test is the licence guard
 
@@ -109,3 +141,7 @@ conditions and additionally checks that a hostile condition name from an importe
 rather than rendered. **If one of those fails, the build is reproducing text it has no licence to
 reproduce, or an import can inject markup.** Treat a failure there as a release blocker, not a test
 to adjust.
+
+`test/build-stamp.test.js` (90 assertions) verifies every page is stamped exactly once, that each
+rev genuinely matches its own content, that the fingerprints are distinct, that every page still
+boots, and that the verbatim legal notices survived stamping untouched.
