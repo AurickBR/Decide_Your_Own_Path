@@ -539,6 +539,34 @@ body.fighting .dice-tray{bottom:144px}
   .cname,.ac-val,.pool .pv input{color:#111}
   h1,h2,h3,.cname,.round-badge .rv,.turnnow .tv{color:#111}
 }
+
+/* ---- exhaustion level + readable condition text ---- */
+.exhrow{display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:6px; padding:6px 9px;
+  background:#0f111a; border:1px solid var(--line-solid); border-radius:8px}
+.exhrow.on{border-color:#8a6a3f; background:#1e1a16}
+.exhrow.dead{border-color:var(--rust); background:#241816}
+.exhname{font-size:.72rem; color:var(--ink)}
+.exhrow.on .exhname{color:var(--gold)}
+.exhb{width:21px; height:21px; border-radius:5px; border:1px solid var(--line-solid); background:var(--raised);
+  color:var(--ink); font-size:.8rem; display:grid; place-items:center}
+.exhb:hover:not(:disabled){border-color:var(--gold); color:var(--gold)}
+.exhb:disabled{opacity:.35; cursor:not-allowed}
+.exhin{width:38px; text-align:center; background:var(--raised); border:1px solid var(--line-solid);
+  color:var(--bone); border-radius:5px; padding:2px 4px; font-family:"JetBrains Mono",monospace; font-size:.76rem}
+.exhslash{font-family:"JetBrains Mono",monospace; font-size:.62rem; color:var(--muted); margin-left:-4px}
+.exheff{font-family:"JetBrains Mono",monospace; font-size:.6rem; color:var(--muted)}
+.exhrow.on .exheff{color:var(--gold)}
+.condtext{margin-top:5px}
+.condtb{background:transparent; border:none; color:var(--violet); font-size:.68rem; padding:2px 0;
+  font-family:"JetBrains Mono",monospace; letter-spacing:.03em}
+.condtb:hover{color:#c9b9e0}
+.condbody{background:#0f111a; border:1px solid var(--line-solid); border-radius:7px; padding:9px 11px;
+  margin-top:3px; font-size:.76rem; line-height:1.55; color:var(--ink)}
+.condbody p{margin:0 0 .55em}
+.condbody p:last-of-type{margin-bottom:0}
+.condbody em{color:var(--bone)}
+.condcc{font-size:.52rem; color:var(--muted); font-family:"JetBrains Mono",monospace; letter-spacing:.09em;
+  text-transform:uppercase; margin-top:8px; opacity:.75}
 </style>
 </head>
 <body>
@@ -634,8 +662,34 @@ const MANA = {1:4,2:6,3:14,4:17,5:27,6:32,7:38,8:44,9:57,10:64,11:73,12:73,13:83
 const AC_BASE = 5;
 const hitDiceFor = lvl => 1 + Math.floor((Math.max(1,lvl)-1)/3);
 
-const CONDITIONS = ["Blinded","Charmed","Concentrating","Deafened","Frightened","Grappled","Incapacitated",
-  "Invisible","Paralyzed","Petrified","Poisoned","Prone","Raging","Restrained","Stunned","Unconscious","Exhaustion"];
+/* ---- exhaustion ----
+   SRD 5.2.1 (CC BY 4.0): levels are cumulative, 6 is death, every D20 Test is reduced by 2 x level
+   and Speed drops 5 ft per level. Initiative is the only D20 Test this tool rolls, so that is where
+   the penalty lands. Recovery happens on a rest, which is the character sheet's job — there is no
+   resting in a combat tracker. See claude/EXHAUSTION_RULE.md. */
+const EXH_MAX = 6;
+const exhOf       = c => Math.max(0, Math.min(EXH_MAX, num(c && c.exh, 0)));
+const exhPenalty  = c => 2 * exhOf(c);
+const exhSpeedLoss= c => 5 * exhOf(c);
+function setExh(id, v){
+  const c = byId(id); if(!c) return;
+  const before = exhOf(c);
+  c.exh = Math.max(0, Math.min(EXH_MAX, num(v, 0)));
+  if(c.exh !== before){
+    logit([{b:c.name}, c.exh===0 ? " sheds the last of its exhaustion." : ` is at exhaustion `, ...(c.exh?[{n:c.exh}, ` of ${EXH_MAX}${c.exh>=EXH_MAX?" — it dies":""}.`]:[])],
+          c.exh>before ? "dmg" : "heal");
+  }
+  renderAll();
+}
+const adjustExh = (id,d) => setExh(id, exhOf(byId(id)) + d);
+
+/* conditions: the fifteen are SRD 5.2.1 text, Concentrating and Raging are ours. Exhaustion is
+   level-based (lvl:1) and is excluded from the on/off chips — it has the stepper above instead. */
+const condMeta  = n => CONDITIONS.find(c=>c.n===n) || null;
+const condList  = () => CONDITIONS.filter(c=>!c.lvl);
+const condPlain = n => { const m=condMeta(n); return m ? m.d.replace(/<[^>]*>/g," ").replace(/&#x27;/g,"'").replace(/\s+/g," ").trim().slice(0,300) : n; };
+
+const CONDITIONS=[{"n":"Blinded","d":"<p>While you have the Blinded condition, you experience the following effects.</p><p><em>Can&#x27;t See.</em> You can&#x27;t see and automatically fail any ability check that requires sight.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage, and your attack rolls have Disadvantage.</p>"},{"n":"Charmed","d":"<p>While you have the Charmed condition, you experience the following effects.</p><p><em>Can&#x27;t Harm the Charmer.</em> You can&#x27;t attack the charmer or target the charmer with damaging abilities or magical effects.</p><p><em>Social Advantage.</em> The charmer has Advantage on any ability check to interact with you socially.</p>"},{"n":"Concentrating","d":"<p>You are sustaining a spell or ability that requires concentration. Its own description says what breaks it and what happens when it ends.</p>","hb":1},{"n":"Deafened","d":"<p>While you have the Deafened condition, you experience the following effect.</p><p><em>Can&#x27;t Hear.</em> You can&#x27;t hear and automatically fail any ability check that requires hearing.</p>"},{"n":"Exhaustion","d":"<p>While you have the Exhaustion condition, you experience the following effects.</p><p><em>Exhaustion Levels.</em> This condition is cumulative. Each time you receive it, you gain 1 Exhaustion level. You die if your Exhaustion level is 6.</p><p><em>D20 Tests Affected.</em> When you make a D20 Test, the roll is reduced by 2 times your Exhaustion level.</p><p><em>Speed Reduced.</em> Your Speed is reduced by a number of feet equal to 5 times your Exhaustion level.</p><p><em>Removing Exhaustion Levels.</em> Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.</p>","lvl":1},{"n":"Frightened","d":"<p>While you have the Frightened condition, you experience the following effects.</p><p><em>Ability Checks and Attacks Affected.</em> You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.</p><p><em>Can&#x27;t Approach.</em> You can&#x27;t willingly move closer to the source of fear.</p>"},{"n":"Grappled","d":"<p>While you have the Grappled condition, you experience the following effects.</p><p><em>Speed 0.</em> Your Speed is 0 and can&#x27;t increase.</p><p><em>Attacks Affected.</em> You have Disadvantage on attack rolls against any target other than the grappler.</p><p><em>Movable.</em> The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.</p>"},{"n":"Incapacitated","d":"<p>While you have the Incapacitated condition, you experience the following effects.</p><p><em>Inactive.</em> You can&#x27;t take any action, Bonus Action, or Reaction.</p><p><em>No Concentration.</em> Your Concentration is broken.</p><p><em>Speechless.</em> You can&#x27;t speak.</p><p><em>Surprised.</em> If you&#x27;re Incapacitated when you roll Initiative, you have Disadvantage on the roll.</p>"},{"n":"Invisible","d":"<p>While you have the Invisible condition, you experience the following effects.</p><p><em>Surprise.</em> If you&#x27;re Invisible when you roll Initiative, you have Advantage on the roll.</p><p><em>Concealed.</em> You aren&#x27;t affected by any effect that requires its target to be seen unless the effect&#x27;s creator can somehow see you. Any equipment you are wearing or carrying is also concealed.</p><p><em>Attacks Affected.</em> Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don&#x27;t gain this benefit against that creature.</p>"},{"n":"Paralyzed","d":"<p>While you have the Paralyzed condition, you experience the following effects.</p><p><em>Incapacitated.</em> You have the Incapacitated condition.</p><p><em>Speed 0.</em> Your Speed is 0 and can&#x27;t increase.</p><p><em>Saving Throws Affected.</em> You automatically fail Strength and Dexterity saving throws.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage.</p><p><em>Automatic Critical Hits.</em> Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.</p>"},{"n":"Petrified","d":"<p>While you have the Petrified condition, you experience the following effects.</p><p><em>Turned to Inanimate Substance.</em> You are transformed, along with any nonmagical objects you are wearing and carrying, into a solid inanimate substance (usually stone). Your weight increases by a factor of ten, and you cease aging.</p><p><em>Incapacitated.</em> You have the Incapacitated condition.</p><p><em>Speed 0.</em> Your Speed is 0 and can&#x27;t increase.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage.</p><p><em>Saving Throws Affected.</em> You automatically fail Strength and Dexterity saving throws.</p><p><em>Resist Damage.</em> You have Resistance to all damage.</p><p><em>Poison Immunity.</em> You have Immunity to the Poisoned condition.</p>"},{"n":"Poisoned","d":"<p>While you have the Poisoned condition, you experience the following effect.</p><p><em>Ability Checks and Attacks Affected.</em> You have Disadvantage on attack rolls and ability checks.</p>"},{"n":"Prone","d":"<p>While you have the Prone condition, you experience the following effects.</p><p><em>Restricted Movement.</em> Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can&#x27;t right yourself.</p><p><em>Attacks Affected.</em> You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage.</p>"},{"n":"Raging","d":"<p>You are in a rage. See the <em>Rage</em> talent for what it grants and what ends it.</p>","hb":1},{"n":"Restrained","d":"<p>While you have the Restrained condition, you experience the following effects.</p><p><em>Speed 0.</em> Your Speed is 0 and can&#x27;t increase.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage, and your attack rolls have Disadvantage.</p><p><em>Saving Throws Affected.</em> You have Disadvantage on Dexterity saving throws.</p>"},{"n":"Stunned","d":"<p>While you have the Stunned condition, you experience the following effects.</p><p><em>Incapacitated.</em> You have the Incapacitated condition.</p><p><em>Saving Throws Affected.</em> You automatically fail Strength and Dexterity saving throws.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage.</p>"},{"n":"Unconscious","d":"<p>While you have the Unconscious condition, you experience the following effects.</p><p><em>Inert.</em> You have the Incapacitated and Prone conditions, and you drop whatever you&#x27;re holding. When this condition ends, you remain Prone.</p><p><em>Speed 0.</em> Your Speed is 0 and can&#x27;t increase.</p><p><em>Attacks Affected.</em> Attack rolls against you have Advantage.</p><p><em>Saving Throws Affected.</em> You automatically fail Strength and Dexterity saving throws.</p><p><em>Automatic Critical Hits.</em> Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.</p><p><em>Unaware.</em> You&#x27;re unaware of your surroundings.</p>"}];
 
 /* section list, in the compendium's own order */
 const SECTIONS = (function(){ const seen=[], m={}; BESTIARY.forEach(b=>{ if(!m[b.sec]){m[b.sec]=1; seen.push(b.sec);} }); return seen; })();
@@ -658,7 +712,7 @@ function blank(){
   };
 }
 let S = blank();
-let ui = { pick:false, tab:"bestiary", q:"", sec:"All", qty:1, side:"foe", open:{}, pendingDel:null, atk:null,
+let ui = { pick:false, tab:"bestiary", q:"", sec:"All", qty:1, side:"foe", open:{}, pendingDel:null, atk:null, condRead:{},
            custom:{name:"",ac:12,hp:10,tp:0,mana:0,initMod:0,side:"foe",g:"⚔"} };
 
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
@@ -700,6 +754,11 @@ function fixCombatant(c){
   c.hp = pool(c.hp,1); c.tp = pool(c.tp,0); c.mana = pool(c.mana,0);
   c.thp = Math.max(0,num(c.thp,0));
   c.cond = Array.isArray(c.cond) ? c.cond.filter(x=>x&&x.n).map(x=>({n:String(x.n), r:(x.r==null?null:Math.max(1,num(x.r,1)))})) : [];
+  /* Exhaustion is a LEVEL, not an on/off condition — same rule as the character sheet, see
+     claude/EXHAUSTION_RULE.md. Older saves carried it as a plain condition chip; lift those. */
+  c.exh = Math.max(0, Math.min(EXH_MAX, num(c.exh, 0)));
+  const legacyExh = c.cond.findIndex(x=>/^exhaustion$/i.test(x.n));
+  if(legacyExh > -1){ c.cond.splice(legacyExh,1); c.exh = Math.max(1, c.exh); }
   c.note = String(c.note||"");
   c.bonusDice = String(c.bonusDice||"");
   c.tpl = c.tpl ? String(c.tpl) : "";      // "<shelf>|<creature>" — what the picker counts
@@ -863,7 +922,7 @@ function rollInit(onlyEmpty){
   let n=0, lines=[];
   S.cs.forEach(c=>{
     if(onlyEmpty && c.init!=null) return;
-    const die=d20(); c.init = die + c.initMod; n++;
+    const die=d20(); c.init = die + c.initMod - exhPenalty(c); n++;   // exhaustion hits every D20 Test
     lines.push(`${c.name} ${c.init}`);
   });
   if(n){ sortCs(); logit(`Initiative rolled for ${n} combatant${n>1?"s":""}.`, ""); }
@@ -1297,9 +1356,23 @@ function detailHTML(c){
     left += `<div class="det-block"><div class="sec-label">Traits</div>` +   // traits ride under the abilities
       b.tr.map(t=>`<div class="trait"><b>${esc(t.n)}.</b> ${esc(t.d)}</div>`).join("") + `</div>`;
   }
+  const xl = exhOf(c);
   blocks += `<div class="det-block wide"><div class="sec-label">Conditions</div>
-    <div class="condpick">${CONDITIONS.map(n=>`<button data-cond="${c.id}|${esc(n)}" class="${c.cond.some(x=>x.n===n)?"on":""}">${n}</button>`).join("")}</div>
+    <div class="exhrow${xl?" on":""}${xl>=EXH_MAX?" dead":""}">
+      <span class="exhname">Exhaustion</span>
+      <button class="exhb" data-exhadj="${c.id}|-1"${xl<=0?" disabled":""}>−</button>
+      <input class="exhin" data-exhset="${c.id}" value="${xl}" inputmode="numeric" aria-label="Exhaustion level">
+      <span class="exhslash">/${EXH_MAX}</span>
+      <button class="exhb" data-exhadj="${c.id}|1"${xl>=EXH_MAX?" disabled":""}>+</button>
+      <span class="exheff">${xl?`D20 Tests −${exhPenalty(c)} · Speed −${exhSpeedLoss(c)} ft${xl>=EXH_MAX?" · dies":""}`:"no effect"}</span>
+    </div>
+    <div class="condpick">${condList().map(cd=>`<button data-cond="${c.id}|${esc(cd.n)}" class="${c.cond.some(x=>x.n===cd.n)?"on":""}" title="${esc(condPlain(cd.n))}">${esc(cd.n)}</button>`).join("")}</div>
     <div class="condrow"><input data-condfree="${c.id}" placeholder="Other condition…"><input data-condr="${c.id}" placeholder="rounds" style="max-width:76px" inputmode="numeric"><button class="rbtn" data-condadd="${c.id}">Add</button></div>
+    ${c.cond.filter(x=>condMeta(x.n)).map(x=>{ const open=!!ui.condRead[c.id+"|"+x.n];
+      return `<div class="condtext${open?" open":""}">
+        <button class="condtb" data-condread="${c.id}|${esc(x.n)}">${open?"▾":"▸"} ${esc(x.n)}</button>
+        ${open?`<div class="condbody">${condMeta(x.n).d}${condMeta(x.n).hb?"":`<div class="condcc">System Reference Document 5.2.1 · CC BY 4.0</div>`}</div>`:""}
+      </div>`; }).join("")}
   </div>`;
   blocks += `<div class="det-block wide"><div class="sec-label">Maximums &amp; notes</div>
     <div class="cf">
@@ -1575,8 +1648,9 @@ function wire(){
     const op = t.closest("[data-open]"); if(op){ const id=op.dataset.open; ui.open[id]=!ui.open[id]; renderAll(); return; }
     const ro = t.closest("[data-rollone]"); if(ro){
       const c = byId(ro.dataset.rollone); if(!c) return;
-      const die = d20(); c.init = die + c.initMod; sortCs();
-      flashRoll(c.init, `${c.name} — d20 ${die} ${sgn(c.initMod)}`);
+      const die = d20(); const xp = exhPenalty(c);
+      c.init = die + c.initMod - xp; sortCs();
+      flashRoll(c.init, `${c.name} — d20 ${die} ${sgn(c.initMod)}${xp?` −${xp} exh`:""}`);
       renderAll(); return;
     }
     const st = t.closest("[data-setturn]"); if(st){ captureLine(); S.activeId = st.dataset.setturn; renderQueue(); return; }
@@ -1600,6 +1674,9 @@ function wire(){
       const c = byId(id); if(c){ c.cond.splice(+i,1); renderAll(); }
       return;
     }
+    const xa = t.closest("[data-exhadj]"); if(xa){ const [id,d]=xa.dataset.exhadj.split("|"); adjustExh(id,+d); return; }
+    const xr = t.closest("[data-condread]"); if(xr){ const k=xr.dataset.condread;
+      ui.condRead[k] ? delete ui.condRead[k] : ui.condRead[k]=1; renderAll(); return; }
     const cd = t.closest("[data-cond]"); if(cd){
       const [id,name] = cd.dataset.cond.split("|");
       const c = byId(id); if(!c) return;
@@ -1681,6 +1758,7 @@ function wire(){
       else { c[key].m=Math.max(0,num(t.value,0)); c[key].c=clamp(c[key].c,0,c[key].m); }
       renderAll(); return;
     }
+    const xs = t.dataset.exhset; if(xs!==undefined){ setExh(xs, t.value); return; }
     const im = t.dataset.initmod; if(im!==undefined){ const c=byId(im); if(c){ c.initMod=num(t.value,0); renderAll(); } return; }
     const sd = t.dataset.side;    if(sd!==undefined){ const c=byId(sd); if(c){ c.side=t.value; renderAll(); } return; }
     if(t.id==="pkSec"){ ui.sec=t.value; renderAll(); return; }
@@ -2111,7 +2189,8 @@ window.__fray = { get S(){return S;}, get ui(){return ui;}, renderAll, displayOr
                   get diceLog(){return diceLog;}, get diceOpen(){return diceOpen;}, get lastRoll(){return lastRoll;}, damage, heal, grantTemp,
                   startEncounter, nextTurn, prevTurn, endEncounter, addTemplate, addCustom, sortCs,
                   charDerived, importCharacter, BESTIARY, hydrate, blank,
-                  logit, renderParts, partsText, save };
+                  logit, renderParts, partsText, save,
+                  exhOf, exhPenalty, exhSpeedLoss, setExh, adjustExh, condMeta, condList, rollInit, CONDITIONS };
 })();
 </script>
 <!-- ============================================================
