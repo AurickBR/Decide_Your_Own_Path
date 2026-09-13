@@ -13578,10 +13578,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -13593,7 +13593,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -16806,10 +16806,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -16821,7 +16821,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -20503,10 +20503,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -20518,7 +20518,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -23981,10 +23981,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -23996,7 +23996,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -27843,10 +27843,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -27858,7 +27858,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -34479,10 +34479,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -34494,7 +34494,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -37035,10 +37035,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -37050,7 +37050,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -40409,10 +40409,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -40424,7 +40424,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -43773,10 +43773,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -43788,7 +43788,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -47057,10 +47057,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -47072,7 +47072,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -50274,10 +50274,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -50289,7 +50289,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -52310,10 +52310,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -52325,7 +52325,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -53866,10 +53866,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -53881,7 +53881,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -55940,10 +55940,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -55955,7 +55955,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -56621,10 +56621,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -56636,7 +56636,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -57363,10 +57363,10 @@ function statPills(a){
 function attackBlock(a){
   const pb=profBonus(a.budget,a.level);
   const rows=a.attacks.map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dmgMod=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dmgMod=sgn(m);
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dmgMod}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${at.note?` · ${esc(at.note)}`:""}</span>
     </div>`;
   }).join("");
@@ -57378,7 +57378,7 @@ function attackBlock(a){
       spell attack <b style="color:var(--bone);font-style:normal">${sgn(atk)}</b>. Cantrips cost 0 mana; higher circles cost 2/3/5/6/7… per level.
     </div>`;
   }
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows}${cast}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows}${cast}</div>`;
 }
 
 /* ============ skills & saves ============ */
@@ -60525,17 +60525,17 @@ function statPills(a){
 function attackBlock(a){
   const pb=pbFromCR(a.cr);
   const rows=(a.attacks||[]).map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dm=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dm=sgn(m);
     let rider="";
     if(at.save){ const sm=mod(a.attr[at.save.abil]||10), dc=8+pb+sm; rider=` · ${esc(at.save.abil)} save DC ${dc}: ${esc(at.save.effect)}`; }
     else if(at.note){ rider=` · ${esc(at.note)}`; }
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dm}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dm}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${rider}</span>
     </div>`;
   }).join("");
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows||'<span class="empty">—</span>'}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows||'<span class="empty">—</span>'}</div>`;
 }
 
 /* ===== traits / skills / senses ===== */
@@ -61034,17 +61034,17 @@ function statPills(a){
 function attackBlock(a){
   const pb=pbFromCR(a.cr);
   const rows=(a.attacks||[]).map(at=>{
-    const m=mod(a.attr[at.ab]||10), toHit=pb+m, dm=sgn(m);
+    const m=mod(a.attr[at.ab]||10), dm=sgn(m);
     let rider="";
     if(at.save){ const sm=mod(a.attr[at.save.abil]||10), dc=8+pb+sm; rider=` · ${esc(at.save.abil)} save DC ${dc}: ${esc(at.save.effect)}`; }
     else if(at.note){ rider=` · ${esc(at.note)}`; }
     return `<div class="atk">
       <span class="anm">${esc(at.name)}</span>
-      <span class="aroll">${sgn(toHit)} to hit · ${esc(at.dmg)}${m!==0?` ${dm}`:""} ${esc(at.type)}</span>
+      <span class="aroll">${esc(at.dmg)}${m!==0?` ${dm}`:""} ${esc(at.type)}</span>
       <span class="adet">${esc(at.reach)}${rider}</span>
     </div>`;
   }).join("");
-  return `<div class="block"><div class="sec-label">Attacks</div>${rows||'<span class="empty">—</span>'}</div>`;
+  return `<div class="block"><div class="sec-label">Attacks — the damage roll is the attack</div>${rows||'<span class="empty">—</span>'}</div>`;
 }
 
 /* ===== traits / skills / senses ===== */
@@ -61270,6 +61270,6 @@ renderFilter(); renderRoster(); renderMain();
 
 <!-- build stamp — generated by tools/stamp_build.py; do not edit by hand -->
 <style>.dyop-build{max-width:1000px;margin:0 auto;padding:0 20px 26px;text-align:center;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.58rem;letter-spacing:.11em;text-transform:uppercase;color:#8a8fa0;opacity:.55}.dyop-build b{font-weight:400;color:#d3b483;opacity:.9}@media print{.dyop-build{display:none!important}}</style>
-<div class="dyop-build" data-build="2026-09-13" data-rev="2edb3ba">compendium-and-bestiary.html &middot; build 2026-09-13 &middot; <b>2edb3ba</b></div>
+<div class="dyop-build" data-build="2026-09-13" data-rev="601fb77">compendium-and-bestiary.html &middot; build 2026-09-13 &middot; <b>601fb77</b></div>
 </body>
 </html>
