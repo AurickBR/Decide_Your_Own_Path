@@ -30,7 +30,10 @@ ok('every one has a description', E('CONDITIONS.every(c=>c.d && c.d.length>20)')
 
 console.log('BOTH TOOLS AGREE');
 const ec=fs.readFileSync(path.join(__dirname,'..','encounter-control.html'),'utf8');
-const dmList=JSON.parse(ec.match(/const CONDITIONS\s*=\s*(\[[\s\S]*?\]);/)[1]).sort();
+/* Both files are written by tools/build_conditions.py. Accept either shape so this assertion is
+   about the NAMES agreeing, not about how each file happens to store them. */
+const dmRaw=JSON.parse(ec.match(/const CONDITIONS\s*=\s*(\[[\s\S]*?\]);\n/)[1]);
+const dmList=dmRaw.map(c=>typeof c==='string'?c:c.n).sort();
 const pcList=E('JSON.stringify(CONDITIONS.map(c=>c.n).sort())');
 ok('the sheet lists exactly what Encounter Control lists',
    JSON.stringify(dmList)===pcList, 'dm='+dmList.length+' pc='+JSON.parse(pcList).length);
