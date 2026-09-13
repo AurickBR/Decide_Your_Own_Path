@@ -53,18 +53,23 @@ CC BY 4.0 requires that modifications be indicated. They are:
 
 ## Conditions
 
-`character-builder-2.html` also carries the fifteen conditions from the SRD 5.2.1 **rules
-glossary**, plus the two this system adds, matching Encounter Control's list of 17 exactly (a test
-asserts that the two lists agree).
+**Both** `character-builder-2.html` and `encounter-control.html` carry the fifteen conditions from
+the SRD 5.2.1 **rules glossary**, plus the two this system adds. One script writes both files, so
+the two tools cannot drift apart — and a test still asserts their lists agree, in case someone
+edits one by hand.
 
 | | Count | Carries |
 |---|---|---|
 | SRD 5.2.1 conditions | 15 | Full rules text, CC BY 4.0 |
 | This system's own — `hb:1` | 2 | Concentrating, Raging. No invented rules text: each points at the thing that causes it |
 
-**Exhaustion is marked `lvl:1`** and is deliberately *not* one of the on/off toggles — it is
-level-based and lives on its own bar, so there is one source of truth for it. Its rules text is
-reachable from that bar instead. See `claude/EXHAUSTION_RULE.md`.
+**Exhaustion is marked `lvl:1`** and is deliberately *not* one of the on/off toggles in either
+tool — it is level-based and gets its own control, so there is one source of truth for it. On the
+character sheet that is the Exhaustion bar; in Encounter Control it is a per-combatant stepper in
+the Conditions block, where it also subtracts 2 × level from initiative (the only D20 Test that
+tool rolls). Recovery stays the sheet's job — a combat tracker has no rests. Encounter Control
+lifts a legacy bare `Exhaustion` chip out of old saves into a level on load. See
+`claude/EXHAUSTION_RULE.md`.
 
 Conditions are **tracked and displayed only** — nothing about them touches a roll. Most of them
 grant Advantage or Disadvantage on attack rolls, and this system has no to-hit roll (see
@@ -76,11 +81,12 @@ every `#### … [Condition]` heading, so the other glossary entries are availabl
 
 ## Regenerating
 
-    python3 tools/build_spells.py        # rebuilds const SPELLS=[…]
-    python3 tools/build_conditions.py    # rebuilds const CONDITIONS=[…]
+    python3 tools/build_spells.py        # rebuilds const SPELLS=[…] in the character builder
+    python3 tools/build_conditions.py    # rebuilds const CONDITIONS=[…] in BOTH tools
 
-Each defaults to its vendored source and `../character-builder-2.html`; both paths can be passed as
-arguments. Both are **idempotent** — they strip and rebuild the generated data, so re-running is
+`build_spells.py` defaults to `tools/srd-spells.md` and `../character-builder-2.html`.
+`build_conditions.py` defaults to `tools/srd-rules-glossary.md` and both HTML tools; pass a
+glossary path followed by any number of target files to override. Both are **idempotent** — they strip and rebuild the generated data, so re-running is
 safe and produces byte-identical output. Each touches **only** its own array; the CSS and render
 code around them are ordinary source and are left alone, so the UI survives a rebuild.
 
@@ -88,6 +94,7 @@ Then verify:
 
     node test/spells.test.js
     node test/conditions.test.js
+    node test/ec-conditions.test.js
 
 `srd_convert.py` turns one spell's Markdown into HTML. Nothing from the source is passed through as
 markup: every scrap of text is escaped first and the only tags in the output are ones the converter
