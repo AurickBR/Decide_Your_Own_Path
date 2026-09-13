@@ -1,0 +1,16 @@
+{
+  "name": "decide-your-own-path",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser tools for the Decide Your Own Path tabletop system. The HTML files are the product; this manifest exists so the test suites have a declared dependency and one command to run them.",
+  "scripts": {
+    "test": "node test/run.js",
+    "test:stamps": "python3 tools/stamp_build.py --check",
+    "build": "python3 tools/build_spells.py && python3 tools/build_conditions.py && python3 tools/stamp_build.py",
+    "verify": "node test/run.js && python3 tools/stamp_build.py --check"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  },
+  "license": "MIT"
+}
