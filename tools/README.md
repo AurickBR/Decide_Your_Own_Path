@@ -79,10 +79,32 @@ block that asserts exactly this: four conditions active must change a skill chec
 Source: `srd-rules-glossary.md` — the full SRD 5.2.1 rules glossary, vendored. The build extracts
 every `#### … [Condition]` heading, so the other glossary entries are available for later work.
 
+## The navigation menu
+
+`build_nav.py` is not SRD material, but it belongs to the same family: one generator, many files.
+
+    python3 tools/build_nav.py           # writes the menu into the five tools and legal.html
+    python3 tools/build_nav.py --check   # verify; exits 1 if any copy is stale or missing
+
+Every page except the portal carries a launcher in its bottom-left corner that opens a menu of the
+whole site. The menu's contents are **read out of `index.html`** — the `CAMPAIGN` name, the `BASE`
+URL, the Drive folder and the `FILES` map — so the hub stays the single place links live, exactly as
+`HOSTING_AND_DEPLOYMENT.md` §4 promises. Rename a file there, re-run this, and all six copies follow.
+
+The emitted block is byte-identical in every page apart from one line: `var HERE = "<filename>"`,
+which is what marks *you are here*. `test/nav.test.js` asserts that identity, asserts every file the
+menu names exists on disk, and asserts nothing in any tool out-stacks the open panel.
+
+Two things it deliberately does **not** do. It does not go into `index.html` — the portal is the
+navigation, and a launcher there would open a smaller copy of the page you are already on. And it
+does not hide DM tools from anyone in a security sense: it follows the `dyop_view` key the portal
+writes, which is convenience only. Every file on the site is a public URL.
+
 ## Regenerating
 
     python3 tools/build_spells.py        # rebuilds const SPELLS=[…] in the character builder
     python3 tools/build_conditions.py    # rebuilds const CONDITIONS=[…] in BOTH tools
+    python3 tools/build_nav.py           # rebuilds the navigation menu in six pages
 
 `build_spells.py` defaults to `tools/srd-spells.md` and `../character-builder-2.html`.
 `build_conditions.py` defaults to `tools/srd-rules-glossary.md` and both HTML tools; pass a
@@ -123,7 +145,11 @@ space is enough to report STALE.
 
     python3 tools/build_spells.py
     python3 tools/build_conditions.py
+    python3 tools/build_nav.py
     python3 tools/stamp_build.py            # last
+
+`build_nav.py` inserts its block *before* the stamp for the same reason: the stamp has to be able to
+cover the menu's bytes, or a changed menu would not show up as a changed build.
 
 The stamp tool is idempotent — the hash covers the content *without* the stamp, so re-running
 rewrites the same bytes. The **date only moves when the content actually moves**: a rebuild that
