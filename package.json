@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node test/run.js",
     "test:stamps": "python3 tools/stamp_build.py --check",
+    "test:browser": "node test/xss-browser.test.js",
     "build": "python3 tools/build_spells.py && python3 tools/build_conditions.py && python3 tools/build_nav.py && python3 tools/stamp_build.py",
     "verify": "node test/run.js && python3 tools/stamp_build.py --check"
   },
