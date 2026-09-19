@@ -79,6 +79,37 @@ block that asserts exactly this: four conditions active must change a skill chec
 Source: `srd-rules-glossary.md` — the full SRD 5.2.1 rules glossary, vendored. The build extracts
 every `#### … [Condition]` heading, so the other glossary entries are available for later work.
 
+## Session codes — the DM's damage reaching the player's sheet
+
+`build_session_code.py` writes one shared codec into **both** The Fray and the Character Builder.
+
+    python3 tools/build_session_code.py           # write the block into both tools
+    python3 tools/build_session_code.py --check   # verify; exits 1 if either copy is stale
+
+The table plays remotely, so the two browsers can never reach each other. The carrier is a single
+line of text the DM pastes into the group chat and the player pastes into their sheet:
+
+    DYOP1|Kesh|hp:14/20|thp:0|tp:2/3|mana:6/12|exh:3|cond:Prone,Grappled|ts:2m9k1f|3f7q
+
+Roughly 80 characters, readable at a glance, and with a trailing checksum so a copy that lost
+characters on the way through a chat window reports itself as damaged instead of applying a wrong
+number. Names and condition text are percent-encoded, so nothing in them can contain a separator
+or smuggle markup. Values are absolute, never deltas, so applying the same code twice is harmless.
+
+The decoder can pick one character's line out of a whole party's block, which is what the Fray's
+**Updates** button produces: the DM pastes once and every player pastes the same thing.
+
+Two rules govern the receiving end, and they are the reason this is not a plain overwrite:
+
+- **The DM owns the current values; the sheet owns the maxima.** A code says `14/20`. The 14 is
+  applied, the 20 is only compared — and a disagreement is reported, because it means the DM is
+  holding a stale import.
+- **Nothing is applied without a click.** The sheet shows what would change and waits.
+
+Only the codec is generated. The interface at each end is hand-written, because the two ends do
+opposite jobs. `test/session-code.test.js` (121 assertions) asserts the two copies are
+byte-identical and that both tools encode and decode the same way.
+
 ## The navigation menu
 
 `build_nav.py` is not SRD material, but it belongs to the same family: one generator, many files.
@@ -104,6 +135,7 @@ writes, which is convenience only. Every file on the site is a public URL.
 
     python3 tools/build_spells.py        # rebuilds const SPELLS=[…] in the character builder
     python3 tools/build_conditions.py    # rebuilds const CONDITIONS=[…] in BOTH tools
+    python3 tools/build_session_code.py  # rebuilds the shared session codec in both play tools
     python3 tools/build_nav.py           # rebuilds the navigation menu in six pages
 
 `build_spells.py` defaults to `tools/srd-spells.md` and `../character-builder-2.html`.
@@ -145,6 +177,7 @@ space is enough to report STALE.
 
     python3 tools/build_spells.py
     python3 tools/build_conditions.py
+    python3 tools/build_session_code.py
     python3 tools/build_nav.py
     python3 tools/stamp_build.py            # last
 
