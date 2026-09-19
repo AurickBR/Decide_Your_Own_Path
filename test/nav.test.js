@@ -70,6 +70,36 @@ ok('every extra chip points somewhere real', JSON.parse(
    .filter(e=>e.href.startsWith(BASE))
    .every(e=>fs.existsSync(path.join(ROOT,e.href.slice(BASE.length)))));
 
+console.log('EVERY LINK ON THE SITE, NOT JUST THE GENERATED ONES');
+{
+  /* The menu is generated and therefore follows a rename. Hand-written links do not, and two of
+     them (the builder's masthead Journal button and the journal's Builder button) survived the
+     menu until 2026-09-19 as exactly that hazard: hardcoded absolute URLs pointing at files whose
+     names live in index.html. They are gone, and this block makes sure nothing like them creeps
+     back in — it walks EVERY absolute site link in EVERY page, generated or not. */
+  const ALL=PAGES.concat(['index.html']);
+  let checked=0;
+  for(const p of ALL){
+    const html=read(p);
+    const links=[...html.matchAll(new RegExp(BASE.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^"\'\\s>]*)','g'))]
+                  .map(m=>m[1]).filter(u=>!u.startsWith('#'));
+    for(const u of links){
+      const file=u.split('#')[0].split('?')[0];
+      checked++;
+      if(file==='') continue;                       /* the bare site root */
+      ok(p+' links to a file that exists: '+file, fs.existsSync(path.join(ROOT,file)));
+    }
+  }
+  ok('the sweep actually found links to check', checked>=10, checked);
+  ok('no page still hardcodes a cross-link outside the menu', PAGES.concat(['index.html']).every(p=>{
+    const html=read(p), i=html.indexOf(OPEN);
+    const own = i>-1 ? html.slice(0,i)+html.slice(html.indexOf(CLOSE,i)+CLOSE.length) : html;
+    /* legal.html and the site root are structural names that will never move; a link to any
+       OTHER tool from outside the generated block is the drift hazard. */
+    return !/aurickbr\.github\.io\/Decide_Your_Own_Path\/(character-builder-2|journal|compendium-and-bestiary|encounter-control|dm-loom)\.html/.test(own);
+  }));
+}
+
 console.log('THE GENERATOR AGREES WITH WHAT IS ON DISK');
 let checkOk=true, checkOut='';
 try{ execFileSync('python3',[path.join(ROOT,'tools','build_nav.py'),'--check'],{encoding:'utf8'}); }
