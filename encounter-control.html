@@ -1125,7 +1125,7 @@ function charDerived(ch){
   const baseProf = 1 + Math.floor(budget/15);
   const prof = baseProf + Math.floor(level/15);
   const hd = hitDiceFor(level);
-  const flat = has("Draconic Resilience") ? hd : 0;
+  const flat = (has("Draconic Resilience") ? hd : 0) + (has("Dwarven Toughness") ? level : 0);
   const tough = has("Toughness") ? 3 : 0;
 
   let hp;
@@ -1180,7 +1180,8 @@ function importCharacter(obj, fileName){
     id: existing ? existing.id : uid(),
     name, g:"🛡", level:d.level, ac:d.ac, initMod:d.initMod,
     hp:d.hp, tp:d.tp, mana:d.mana, attr:d.attr, pb:d.prof,
-    note: `prof ${sgn(d.prof)}`
+    species: (typeof obj.species==="string" && obj.species) ? obj.species : null,
+    note: `${(typeof obj.species==="string"&&obj.species)?obj.species+" · ":""}prof ${sgn(d.prof)}`
   };
   if(existing) Object.assign(existing, rec); else S.party.push(rec);
   return name;
