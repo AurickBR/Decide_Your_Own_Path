@@ -969,6 +969,7 @@ input,select{font-family:inherit}
 .spec-detail .sd-meta{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:4px}
 .spec-sec{margin-top:13px}
 .spec-sec .ssh{font-size:.6rem; text-transform:uppercase; letter-spacing:.16em; color:var(--verd); margin-bottom:7px}
+.spec-sec .ssh em{font-style:normal; color:var(--muted); letter-spacing:.1em; margin-left:7px}
 .spec-trait{border-top:1px solid var(--line); padding:7px 0}
 .spec-trait:first-of-type{border-top:0; padding-top:0}
 .spec-trait b{color:var(--bone); font-family:"IM Fell English",serif; font-weight:400; font-size:.99rem}
@@ -977,9 +978,18 @@ input,select{font-family:inherit}
 .spec-chip{padding:5px 11px; border-radius:20px; border:1px solid var(--line-solid); background:transparent; color:var(--muted); font-size:.74rem}
 .spec-chip.on{background:var(--verd); color:#0b1512; border-color:var(--verd); font-weight:500}
 .spec-chip em{font-style:normal; opacity:.75; margin-left:5px; font-size:.68rem}
+.lin-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px}
+.lin-row{display:flex; align-items:baseline; gap:8px; border:1px solid var(--line-solid); border-radius:8px; padding:7px 10px; background:#00000022}
+.lin-row.on{border-color:var(--verd); background:#1c2a2566}
+.lin-row .ln{font-family:"IM Fell English",serif; font-size:.96rem; color:var(--bone)}
+.lin-row.on .ln{color:var(--verd)}
+.lin-row .lt{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); opacity:.85}
+.lin-row .lc{margin-left:auto; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.6rem; color:var(--muted)}
+.lin-sub{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 6px}
 .spec-buy{font-size:.86rem; line-height:1.65; color:var(--muted)}
 .spec-buy b{color:var(--gold); font-weight:400}
 .spec-buy .taken{color:var(--verd)}
+.spec-hint{font-size:.8rem; color:var(--muted); margin-top:7px}
 
 </style>
 </head>
@@ -1048,7 +1058,7 @@ input,select{font-family:inherit}
           <span class="hint">optional &middot; the pick is free &middot; traits that change a number are talents you buy</span>
         </div>
         <div class="card-body">
-          <p class="hint" style="margin:0 0 12px">Choosing a species costs nothing and grants its identity traits &mdash; size, speed, darkvision and the like. Its stronger traits live in the <b>Talents</b> tab under the <b>Species</b> tag and cost points like everything else. Leave this on <b>Unspecified</b> to build without a species, exactly as before.</p>
+          <p class="hint" style="margin:0 0 12px">Choosing a species costs nothing and grants its identity traits &mdash; size, speed, darkvision and the like. Everything stronger, <b>lineages included</b>, is an ordinary talent in the <b>Talents</b> tab under the <b>Species</b> tag, bought from the same ledger. Leave this on <b>Unspecified</b> to build without a species, exactly as before.</p>
           <div id="speciesPanel"></div>
         </div>
       </section>
@@ -1268,8 +1278,10 @@ const CREATURE_TYPES = ["Aberrations","Beasts","Celestials","Constructs","Dragon
 
 /* ============ species (SRD 5.2.1, CC BY 4.0) ============
    Optional. Picking a species is free and grants its identity traits.
-   Traits that change a number on the sheet are talents in the Species tag,
-   bought with points like everything else. See claude/SPECIES_EVALUATION.md. */
+   Traits that change a number are talents, bought from the same ledger.
+   Every lineage is its own talent, named "Lineage - X" — draconic ancestries
+   and giant ancestries included. Nothing about a lineage is free.
+   See claude/SPECIES_EVALUATION.md. */
 const SPECIES = [
   { name:"Dragonborn", size:"Medium", speed:30, dark:60,
     blurb:"Dragon-descended, scaled, and carrying a breath that remembers its ancestor.",
@@ -1280,8 +1292,7 @@ const SPECIES = [
       {n:"Green",dmg:"Poison"},{n:"Red",dmg:"Fire"},{n:"Silver",dmg:"Cold"},{n:"White",dmg:"Cold"}
     ],
     free:[
-      ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim — in greys, not colour."],
-      ["Damage Resistance","You have resistance to the damage type of your draconic ancestry."]
+      ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim — in greys, not colour."]
     ],
     buy:["Breath Weapon","Draconic Flight"] },
 
@@ -1296,47 +1307,52 @@ const SPECIES = [
 
   { name:"Elf", size:"Medium", speed:30, dark:60,
     blurb:"Fey-touched and long-lived. They do not sleep so much as step sideways out of the hour.",
-    linLabel:"Elven lineage",
+    linLabel:"Elven lineage", linLeveled:3,
     lineages:[
-      {n:"Drow",note:"Darkvision 120 ft · Dancing Lights, then Faerie Fire and Darkness"},
-      {n:"High Elf",note:"Prestidigitation, then Detect Magic and Misty Step"},
-      {n:"Wood Elf",note:"Speed 35 ft · Druidcraft, then Longstrider and Pass without Trace"}
+      {n:"Drow", tag:"Darkvision 120 ft", html:
+       "<p>You are of the deep elves, raised out of the sun. <b>Your darkvision extends to 120 feet.</b></p><p><b>Level 1:</b> you know the <b>Dancing Lights</b> cantrip.<br /><b>Level 2:</b> you can cast <b>Faerie Fire</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Darkness</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent. If you learn any of these spells by other means you may also cast them normally.</p>"},
+      {n:"High Elf", tag:"", html:
+       "<p>You are of the high courts, taught letters and cantrips before you were taught the sword.</p><p><b>Level 1:</b> you know the <b>Prestidigitation</b> cantrip, and may swap it for another cantrip whenever you finish a long rest.<br /><b>Level 2:</b> you can cast <b>Detect Magic</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Misty Step</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent.</p>"},
+      {n:"Wood Elf", tag:"Speed 35 ft", html:
+       "<p>You are of the forest holds, and you move through them faster than anything that hunts you. <b>Your walking speed becomes 35 feet.</b></p><p><b>Level 1:</b> you know the <b>Druidcraft</b> cantrip.<br /><b>Level 2:</b> you can cast <b>Longstrider</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Pass without Trace</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent.</p>"}
     ],
     free:[
-      ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim. A Drow sees 120 feet instead."],
+      ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim. The Drow lineage extends this to 120 feet."],
       ["Fey Ancestry","You have advantage on saves to avoid or end the Charmed condition."],
       ["Trance","You take a Long Rest in four hours of meditation rather than sleep, and stay conscious throughout."]
     ],
-    buy:["Elven Lineage","Keen Senses"] },
+    buy:["Keen Senses"] },
 
   { name:"Gnome", size:"Small", speed:30, dark:60,
     blurb:"Small, quick-minded, and almost impossible to talk into anything.",
     linLabel:"Gnomish lineage",
     lineages:[
-      {n:"Forest Gnome",note:"Minor Illusion · Speak with Animals at will"},
-      {n:"Rock Gnome",note:"Mending and Prestidigitation · build a Tiny clockwork device"}
+      {n:"Forest Gnome", tag:"", html:
+       "<p>You know the <b>Minor Illusion</b> cantrip, and you can cast <b>Speak with Animals</b> at will without spending mana. Your spellcasting ability for both is Intelligence.</p>"},
+      {n:"Rock Gnome", tag:"", html:
+       "<p>You know the <b>Mending</b> and <b>Prestidigitation</b> cantrips, with Intelligence as your spellcasting ability.</p><p><b>Clockwork Device.</b> You can spend an hour and 10 gp of materials to build a Tiny clockwork device with one small, useful effect — a sound, a smell, a light, a fire-starter, a music box. You can have three such devices at a time, and dismantling one refunds its materials.</p>"}
     ],
     free:[
       ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim."],
       ["Gnomish Cunning","You have advantage on Intelligence, Wisdom and Charisma saving throws."]
     ],
-    buy:["Gnomish Lineage"] },
+    buy:[] },
 
   { name:"Goliath", size:"Medium", speed:35, dark:0,
     blurb:"Giant-blooded, half a head taller than anyone in the room, and carrying a giant's gift.",
     linLabel:"Giant ancestry",
     lineages:[
-      {n:"Cloud Giant",note:"Cloud's Jaunt — Bonus Action teleport 30 ft"},
-      {n:"Fire Giant",note:"Fire's Burn — a hit deals an extra 1d10 fire"},
-      {n:"Frost Giant",note:"Frost's Chill — an extra 1d6 cold and speed −10 ft"},
-      {n:"Hill Giant",note:"Hill's Tumble — a hit knocks a Large or smaller target Prone"},
-      {n:"Stone Giant",note:"Stone's Endurance — Reaction, reduce damage by 1d12 + Con"},
-      {n:"Storm Giant",note:"Storm's Thunder — Reaction, 1d8 thunder to the attacker"}
+      {n:"Cloud Giant", tag:"", html:"<p><b>Cloud's Jaunt.</b> As a Bonus Action you teleport up to 30 feet to a space you can see. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
+      {n:"Fire Giant",  tag:"", html:"<p><b>Fire's Burn.</b> When you hit with an attack, the target takes an extra <b>1d10 Fire</b> damage. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
+      {n:"Frost Giant", tag:"", html:"<p><b>Frost's Chill.</b> When you hit with an attack, the target takes an extra <b>1d6 Cold</b> damage and its speed drops by 10 feet until the start of your next turn. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
+      {n:"Hill Giant",  tag:"", html:"<p><b>Hill's Tumble.</b> When you hit a Large or smaller creature, you can knock it Prone. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
+      {n:"Stone Giant", tag:"", html:"<p><b>Stone's Endurance.</b> As a Reaction when you take damage, reduce that damage by <b>1d12 + your Constitution modifier</b>. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
+      {n:"Storm Giant", tag:"", html:"<p><b>Storm's Thunder.</b> As a Reaction when you take damage, deal <b>1d8 Thunder</b> damage to one creature you can see within 60 feet. Usable a number of times equal to your proficiency bonus per long rest.</p>"}
     ],
     free:[
       ["Powerful Build","You have advantage on saves against the Grappled condition, and you count as one size larger for carrying capacity."]
     ],
-    buy:["Giant Ancestry","Large Form"] },
+    buy:["Large Form"] },
 
   { name:"Halfling", size:"Small", speed:30, dark:0,
     blurb:"Small, cheerful, and luckier than any accounting of the odds allows.",
@@ -1364,32 +1380,44 @@ const SPECIES = [
 
   { name:"Tiefling", size:"Medium", sizes:["Medium","Small"], speed:30, dark:60,
     blurb:"Marked by a bloodline out of the lower planes, and never quite allowed to forget it.",
-    linLabel:"Fiendish legacy",
+    linLabel:"Fiendish legacy", linLeveled:3,
     lineages:[
-      {n:"Abyssal",note:"Resistance to Poison · Poison Spray, then Ray of Sickness and Hold Person"},
-      {n:"Chthonic",note:"Resistance to Necrotic · Chill Touch, then False Life and Ray of Enfeeblement"},
-      {n:"Infernal",note:"Resistance to Fire · Fire Bolt, then Hellish Rebuke and Darkness"}
+      {n:"Abyssal", tag:"Resist Poison", html:
+       "<p>Your blood runs back to the Abyss. <b>You have resistance to Poison damage.</b></p><p><b>Level 1:</b> you know the <b>Poison Spray</b> cantrip.<br /><b>Level 2:</b> you can cast <b>Ray of Sickness</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Hold Person</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent.</p>"},
+      {n:"Chthonic", tag:"Resist Necrotic", html:
+       "<p>Your blood runs back to the grey lands under the world. <b>You have resistance to Necrotic damage.</b></p><p><b>Level 1:</b> you know the <b>Chill Touch</b> cantrip.<br /><b>Level 2:</b> you can cast <b>False Life</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Ray of Enfeeblement</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent.</p>"},
+      {n:"Infernal", tag:"Resist Fire", html:
+       "<p>Your blood runs back to the Nine Hells, and the bargain still stands. <b>You have resistance to Fire damage.</b></p><p><b>Level 1:</b> you know the <b>Fire Bolt</b> cantrip.<br /><b>Level 2:</b> you can cast <b>Hellish Rebuke</b> once per long rest without spending mana.<br /><b>Level 3:</b> you can cast <b>Darkness</b> once per long rest without spending mana.</p><p>Choose Intelligence, Wisdom or Charisma as your spellcasting ability for these when you take this talent.</p>"}
     ],
     free:[
       ["Darkvision","You see 60 feet in dim light as though it were bright, and in darkness as though it were dim."],
       ["Otherworldly Presence","You know the Thaumaturgy cantrip and can cast it with your legacy's spellcasting ability."]
     ],
-    buy:["Fiendish Legacy"] }
+    buy:[] }
 ];
+const LIN_PREFIX = "Lineage - ";
 const speciesDef = n => SPECIES.find(s=>s.name===n) || null;
 const curSpecies = ()=> speciesDef(S.species);
 const speciesIs = n => S.species===n;
+const linTalentName = l => LIN_PREFIX + l;
+/* the chosen lineage is simply whichever lineage talent is held */
+function curLineage(){
+  const d=curSpecies(); if(!d||!d.lineages) return null;
+  const hit=d.lineages.find(l=>!!S.talents[linTalentName(l.n)]);
+  return hit?hit.n:null;
+}
+const hasLineage = n => S.species && !!S.talents[linTalentName(n)];
 /* derived: size, walking speed, darkvision. All default when no species is chosen. */
 function charSize(){ const d=curSpecies(); if(!d) return "Medium"; return (d.sizes && S.specSize) ? S.specSize : d.size; }
 function baseSpeed(){
   const d=curSpecies(); let sp = d ? d.speed : 30;
-  if(S.species==="Elf" && S.lineage==="Wood Elf") sp=35;
+  if(S.species==="Elf" && hasLineage("Wood Elf")) sp=35;
   return sp;
 }
 const curSpeed = ()=> Math.max(0, baseSpeed()-exhSpeedLoss());
 function darkvisionFt(){
   const d=curSpecies(); if(!d) return 0;
-  if(S.species==="Elf" && S.lineage==="Drow") return 120;
+  if(S.species==="Elf" && hasLineage("Drow")) return 120;
   return d.dark||0;
 }
 
@@ -1434,9 +1462,9 @@ const TM = {
 const meta = name => TM[name] || {kind:"single"};
 
 
-/* ---- species-gated talents: ordinary talents with a Species (X) requirement ---- */
+/* ---- species talents: ordinary talents behind a Species (X) requirement ---- */
 const SPECIES_TALENTS = [
- {name:"Breath Weapon", req:"Species (Dragonborn)", tags:["Species","Offense"], html:
+ {name:"Breath Weapon", req:"Species (Dragonborn); Any Dragonborn lineage", tags:["Species","Offense"], html:
   "<p>In place of one attack you exhale your ancestor's element in a 15-foot Cone or a 30-foot by 5-foot Line. Each creature in the area makes a Dexterity saving throw against a DC of 8 + your Constitution modifier + your proficiency bonus, taking <b>1d10</b> damage of your ancestry's type on a failure and half on a success.</p><p>The damage rises to 2d10 once your proficiency bonus reaches +4, and to 3d10 at +6. You may use it a number of times equal to your proficiency bonus per long rest.</p>"},
 
  {name:"Draconic Flight", req:"Species (Dragonborn); Proficiency Bonus +3", tags:["Species","Movement"], html:
@@ -1445,17 +1473,8 @@ const SPECIES_TALENTS = [
  {name:"Dwarven Toughness", req:"Species (Dwarf)", tags:["Species","Survivability"], html:
   "<p>Your hit point maximum increases by 1, and by a further 1 every time you gain a level.</p><p>This stacks with the <b>Toughness</b> talent, which works per hit die rather than per level.</p>"},
 
- {name:"Elven Lineage", req:"Species (Elf)", tags:["Species","Magic"], html:
-  "<p>Your lineage grants a cantrip at once, a second spell when your proficiency bonus reaches +3, and a third at +4. Each of the two spells can be cast once per long rest without spending mana, and you may also cast them normally if you know them by other means. Your spellcasting ability for these is Intelligence, Wisdom or Charisma — choose when you take this talent.</p><ul><li><b>Drow</b> — Dancing Lights, then Faerie Fire and Darkness. Your darkvision extends to 120 feet.</li><li><b>High Elf</b> — Prestidigitation, then Detect Magic and Misty Step. You may swap the cantrip on a long rest.</li><li><b>Wood Elf</b> — Druidcraft, then Longstrider and Pass without Trace. Your walking speed is 35 feet.</li></ul><p>Take it at level 1 for the cantrip, 2 for the second spell, 3 for the third.</p>"},
-
  {name:"Keen Senses", req:"Species (Elf)", tags:["Species","Skills"], html:
   "<p>You gain one extra Trained skill slot, which must be spent on Insight, Perception or Survival.</p>"},
-
- {name:"Gnomish Lineage", req:"Species (Gnome)", tags:["Species","Magic","Utility"], html:
-  "<ul><li><b>Forest Gnome</b> — you know Minor Illusion, and can cast Speak with Animals at will without spending mana.</li><li><b>Rock Gnome</b> — you know Mending and Prestidigitation, and can spend an hour and 10 gp of materials to build a Tiny clockwork device with a small, useful effect.</li></ul><p>Your spellcasting ability for these is Intelligence.</p>"},
-
- {name:"Giant Ancestry", req:"Species (Goliath)", tags:["Species","Offense","Survivability"], html:
-  "<p>You gain the benefit of the giant ancestry chosen on the Species tab, usable a number of times equal to your proficiency bonus per long rest.</p><ul><li><b>Cloud's Jaunt</b> — Bonus Action, teleport 30 feet to a space you can see.</li><li><b>Fire's Burn</b> — when you hit, the target takes an extra 1d10 Fire damage.</li><li><b>Frost's Chill</b> — when you hit, an extra 1d6 Cold damage and the target's speed drops 10 feet until your next turn.</li><li><b>Hill's Tumble</b> — when you hit a Large or smaller creature, you may knock it Prone.</li><li><b>Stone's Endurance</b> — Reaction, reduce damage taken by 1d12 + your Constitution modifier.</li><li><b>Storm's Thunder</b> — Reaction when damaged, deal 1d8 Thunder to the attacker within 60 feet.</li></ul>"},
 
  {name:"Large Form", req:"Species (Goliath); Proficiency Bonus +3", tags:["Species","Movement"], html:
   "<p>As a Bonus Action you grow to Large for 10 minutes, if there is room. While Large you have advantage on Strength checks and your speed increases by 10 feet. Once per long rest.</p>"},
@@ -1470,19 +1489,38 @@ const SPECIES_TALENTS = [
   "<p>You can take the Dash action as a Bonus Action, and when you do you gain temporary hit points equal to your proficiency bonus. Usable a number of times equal to your proficiency bonus per long rest.</p>"},
 
  {name:"Relentless Endurance", req:"Species (Orc)", tags:["Species","Survivability"], html:
-  "<p>When you are reduced to 0 hit points but not killed outright, you may drop to 1 hit point instead. Once per long rest.</p>"},
-
- {name:"Fiendish Legacy", req:"Species (Tiefling)", tags:["Species","Magic"], html:
-  "<p>Your legacy grants a damage resistance and a cantrip at once, a second spell when your proficiency bonus reaches +3, and a third at +4. Each of the two spells can be cast once per long rest without spending mana. Your spellcasting ability is Intelligence, Wisdom or Charisma — choose when you take this talent.</p><ul><li><b>Abyssal</b> — resistance to Poison. Poison Spray, then Ray of Sickness and Hold Person.</li><li><b>Chthonic</b> — resistance to Necrotic. Chill Touch, then False Life and Ray of Enfeeblement.</li><li><b>Infernal</b> — resistance to Fire. Fire Bolt, then Hellish Rebuke and Darkness.</li></ul><p>Take it at level 1 for the resistance and cantrip, 2 for the second spell, 3 for the third.</p>"}
+  "<p>When you are reduced to 0 hit points but not killed outright, you may drop to 1 hit point instead. Once per long rest.</p>"}
 ];
 TALENTS.push(...SPECIES_TALENTS);
-Object.assign(TM,{"Elven Lineage":{kind:"leveled",max:3},"Fiendish Legacy":{kind:"leveled",max:3}});
+
+/* ---- one talent per lineage, generated from SPECIES so there is a single source of truth ---- */
+const LINEAGE_TALENTS = [];
+SPECIES.forEach(sp=>{
+  if(!sp.lineages) return;
+  sp.lineages.forEach(l=>{
+    /* a draconic ancestry is described by its damage type alone */
+    if(!l.html && l.dmg){
+      l.tag = `Resist ${l.dmg}`;
+      l.html = `<p>Your ancestor was a <b>${l.n.toLowerCase()} dragon</b>. You have <b>resistance to ${l.dmg} damage</b>, and your <b>Breath Weapon</b> deals ${l.dmg} damage.</p>`;
+    }
+    const nm = LIN_PREFIX + l.n;
+    LINEAGE_TALENTS.push({name:nm, species:sp.name, lineage:l.n});
+    TALENTS.push({
+      name: nm,
+      req: `Species (${sp.name}); One ${sp.name} lineage only`,
+      tags: ["Species","Lineage"],
+      html: `<p class="lin-sub">${sp.linLabel} · ${sp.name}</p>` + l.html
+    });
+    if(sp.linLeveled) TM[nm] = {kind:"leveled", max:sp.linLeveled};
+  });
+});
+const lineageTalentsFor = species => LINEAGE_TALENTS.filter(l=>l.species===species);
 TALENTS.sort((a,b)=>a.name.localeCompare(b.name));
 const ALL_TAGS = (()=>{const s=new Set();TALENTS.forEach(t=>t.tags.forEach(x=>s.add(x)));return [...s].sort();})();
 const TIER_NAME = {1:"Trained",2:"Expert",3:"Master"};
 
 /* ============ state ============ */
-const blankChar = ()=>({name:"",level:1,budget:25,species:null,lineage:null,specSize:null,
+const blankChar = ()=>({name:"",level:1,budget:25,species:null,specSize:null,
   attr:{STR:6,DEX:6,CON:6,INT:6,WIS:6,CHA:6},
   saves:[],skills:{},talents:{},hpDice:null,open:{},
   spells:{},armor:{equipped:null,shield:null},wtMartial:[],play:{},items:[],inv:[],savedRolls:[],conds:{}});
@@ -1570,7 +1608,7 @@ function reqTalentMet(clause){
   if(base==="Spell Knowledge"){ const lv=schoolLevels(d); if(!detail)return Object.values(lv).some(x=>x>0); return (lv[detail]||0)>=1; }
   return talentTaken(base);
 }
-function evalReq(reqStr){
+function evalReq(reqStr, selfName){
   if(!reqStr || /^none$/i.test(reqStr.trim())) return {ok:true,clauses:[]};
   const out=[]; let ok=true;
   for(const c of reqStr.split(/;|·/).map(x=>x.trim()).filter(Boolean)){
@@ -1582,6 +1620,12 @@ function evalReq(reqStr){
     else if(/Acrobatics\s+proficiency/i.test(c)){ met=!!S.skills["Acrobatics"]; }
     else if(/Knowledge\s+proficiency/i.test(c)){ met=KNOWLEDGE_SKILLS.some(s=>S.skills[s]); label="a Knowledge skill (Arcana/History/Nature/Religion)"; }
     else if((m=c.match(/^Species\s*\((.+)\)$/i))){ const want=m[1].trim(); met=(S.species===want); label=`Species: ${want}`; }
+    else if((m=c.match(/^Any (.+) lineage$/i))){ const spn=m[1].trim();
+      met = LINEAGE_TALENTS.some(l=>l.species===spn && S.talents[l.name]);
+      label=`a ${spn} lineage`; }
+    else if((m=c.match(/^One (.+) lineage only$/i))){ const spn=m[1].trim();
+      met = !LINEAGE_TALENTS.some(l=>l.species===spn && l.name!==selfName && S.talents[l.name]);
+      label=`no other ${spn} lineage`; }
     else { met=reqTalentMet(c); }
     if(!met) ok=false;
     out.push({label,met});
@@ -1604,13 +1648,23 @@ function migrate(){
   /* species is optional; anything unrecognised falls back to no species */
   {
     const sd = SPECIES.find(s=>s.name===S.species);
-    if(!sd){ S.species=null; S.lineage=null; S.specSize=null; }
-    else{
-      if(sd.lineages){ if(!sd.lineages.some(l=>l.n===S.lineage)) S.lineage=sd.lineages[0].n; }
-      else S.lineage=null;
-      if(sd.sizes){ if(!sd.sizes.includes(S.specSize)) S.specSize=sd.sizes[0]; }
-      else S.specSize=null;
+    if(!sd){ S.species=null; S.specSize=null; }
+    else if(sd.sizes){ if(!sd.sizes.includes(S.specSize)) S.specSize=sd.sizes[0]; }
+    else S.specSize=null;
+    /* lineages used to be one omnibus talent plus a free S.lineage pick.
+       Carry those saves over to the per-lineage talent at the same level. */
+    if(typeof S.talents==="object" && S.talents){
+      const OLD=["Elven Lineage","Fiendish Legacy","Gnomish Lineage","Giant Ancestry","Draconic Ancestry"];
+      let lvl=0, had=false;
+      for(const o of OLD){ const d=S.talents[o];
+        if(d){ had=true; lvl=Math.max(lvl, (typeof d==="number"?d:(d.level||1))); delete S.talents[o]; delete S.open[o]; } }
+      const l = sd && sd.lineages && sd.lineages.find(x=>x.n===S.lineage);
+      if(l){
+        const nm = "Lineage - " + l.n;
+        if(!S.talents[nm] && (had || sd.name==="Dragonborn")) S.talents[nm]={level:Math.max(1,lvl||1),choices:[]};
+      }
     }
+    delete S.lineage;
   }
   /* security: regenerate any id that is not our own uid() shape; coerce names to strings */
   const fixId=o=>{ if(o&&typeof o==="object"&&!SAFE_ID.test(String(o.id||""))) o.id=uid(); return o; };
@@ -1784,7 +1838,7 @@ function choiceBlock(t){
 
 /* ============ render: talent card ============ */
 function talentActions(t){
-  const m=meta(t.name), d=S.talents[t.name], req=evalReq(t.req), taken=!!d;
+  const m=meta(t.name), d=S.talents[t.name], req=evalReq(t.req,t.name), taken=!!d;
   const noRoom=remaining()<1;
   if(m.kind==="ref"){
     const cnt=Object.values(S.skills).filter(x=>x>=m.refTier).length;
@@ -1803,7 +1857,7 @@ function talentActions(t){
 }
 function reqHTML(t){
   if(!t.req || /^none$/i.test(t.req)) return `<div class="t-req">No requirement</div>`;
-  const r=evalReq(t.req);
+  const r=evalReq(t.req,t.name);
   const parts=r.clauses.map(c=>`<span class="${c.met?'rok':''}">${c.met?'✓':'✕'} ${c.label}</span>`).join(" · ");
   return `<div class="t-req ${r.ok?'':'bad'}">Requires: ${parts}</div>`;
 }
@@ -1823,7 +1877,7 @@ function renderTalents(){
   for(const t of TALENTS){
     if(UI.tag!=="All" && !t.tags.includes(UI.tag)) continue;
     if(q && !t.name.toLowerCase().includes(q) && !t.tags.join(" ").toLowerCase().includes(q)) continue;
-    const req=evalReq(t.req), d=S.talents[t.name], taken=!!d;
+    const req=evalReq(t.req,t.name), d=S.talents[t.name], taken=!!d;
     if(UI.availOnly && !req.ok && !taken) continue;
     shown++;
     const m=meta(t.name), invalid=taken&&!req.ok, cost=taken?talentCost(t.name,d):0;
@@ -1871,7 +1925,8 @@ function renderSpecies(){
   h+=`</div>`;
 
   if(cur){
-    h+=`<div class="spec-detail"><h3>${esc(cur.name)}</h3>
+    const lin=curLineage();
+    h+=`<div class="spec-detail"><h3>${esc(cur.name)}${lin?` <span style="font-size:.8rem;color:var(--verd)">&middot; ${esc(lin)}</span>`:''}</h3>
         <div class="sd-meta">Size ${esc(charSize())} &middot; Speed ${baseSpeed()} ft${darkvisionFt()?` &middot; Darkvision ${darkvisionFt()} ft`:''}</div>`;
 
     if(cur.sizes){
@@ -1880,28 +1935,32 @@ function renderSpecies(){
       h+=`</div></div>`;
     }
 
-    if(cur.lineages){
-      h+=`<div class="spec-sec"><div class="ssh">${esc(cur.linLabel||"Lineage")}</div><div class="spec-chips">`;
-      cur.lineages.forEach(l=>{
-        const tail = l.dmg ? `<em>${esc(l.dmg)}</em>` : (l.note?`<em>${esc(l.note)}</em>`:"");
-        h+=`<button class="spec-chip${S.lineage===l.n?' on':''}" data-lineage="${esc(l.n)}">${esc(l.n)}${tail}</button>`;
-      });
-      h+=`</div></div>`;
-    }
-
     h+=`<div class="spec-sec"><div class="ssh">Free with the pick</div>`;
     cur.free.forEach(([n,d])=>{ h+=`<div class="spec-trait"><b>${esc(n)}</b><span>${esc(d)}</span></div>`; });
     h+=`</div>`;
 
-    if(cur.buy && cur.buy.length){
-      h+=`<div class="spec-sec"><div class="ssh">Bought in the Talents tab</div><div class="spec-buy">`;
-      h+=cur.buy.map(n=>{
+    if(cur.lineages){
+      const taken=lineageTalentsFor(cur.name).filter(l=>!!S.talents[l.name]).length;
+      h+=`<div class="spec-sec"><div class="ssh">${esc(cur.linLabel||"Lineage")}<em>${taken>1?'more than one taken &mdash; pick one':'one talent, bought in the Talents tab'}</em></div><div class="lin-list">`;
+      cur.lineages.forEach(l=>{
+        const nm=LIN_PREFIX+l.n, d=S.talents[nm], on=!!d;
+        const lv=(cur.linLeveled&&d)?`Lv ${d.level}/${cur.linLeveled}`:(on?'taken':'');
+        h+=`<div class="lin-row${on?' on':''}"><span class="ln">${esc(l.n)}</span>${l.tag?`<span class="lt">${esc(l.tag)}</span>`:''}<span class="lc">${esc(lv)}</span></div>`;
+      });
+      h+=`</div><div class="spec-hint">Each lineage is a separate talent named <b>${esc(LIN_PREFIX)}${esc(cur.lineages[0].n)}</b> and so on. Take <b>one</b>${cur.linLeveled?`, and raise it to level ${cur.linLeveled} for the full progression`:''} — holding two marks both as unmet.</div></div>`;
+    }
+
+    const other=(cur.buy||[]);
+    if(other.length){
+      h+=`<div class="spec-sec"><div class="ssh">Other species talents</div><div class="spec-buy">`;
+      h+=other.map(n=>{
         const taken=!!S.talents[n];
         return `<b class="${taken?'taken':''}">${esc(n)}</b>${taken?' &#10003;':''}`;
       }).join(" &middot; ");
-      h+=`<div style="margin-top:6px">Filter the Talents tab by the <b>Species</b> tag to find them.</div></div></div>`;
+      h+=`</div></div>`;
     }
 
+    h+=`<div class="spec-hint">Filter the Talents tab by the <b>Species</b> tag to find all of these.</div>`;
     h+=`<div class="sp-cc">System Reference Document 5.2.1 &middot; CC BY 4.0</div></div>`;
   }
   box.innerHTML=h;
@@ -1920,7 +1979,7 @@ function renderSheet(){
   let h="";
   h+=statCard("Proficiency",(pb>=0?'+':'')+pb,"accent");
   h+=statCard("Talent points",hd,"accent");
-  h+=`<div class="stat wide"><div class="k">Species</div><div class="v" style="font-size:1rem;font-family:'IM Fell English',serif">${S.species?esc(S.species):"Unspecified"}${S.lineage?` <small>&middot; ${esc(S.lineage)}</small>`:""}</div><div class="note">${esc(charSize())} &middot; speed ${baseSpeed()} ft${darkvisionFt()?` &middot; darkvision ${darkvisionFt()} ft`:""}</div></div>`;
+  h+=`<div class="stat wide"><div class="k">Species</div><div class="v" style="font-size:1rem;font-family:'IM Fell English',serif">${S.species?esc(S.species):"Unspecified"}${curLineage()?` <small>&middot; ${esc(curLineage())}</small>`:""}</div><div class="note">${esc(charSize())} &middot; speed ${baseSpeed()} ft${darkvisionFt()?` &middot; darkvision ${darkvisionFt()} ft`:""}</div></div>`;
   const hpRolled=Array.isArray(S.hpDice);
   const hpVal=hpRolled?`${hpTotalFromDice(S.hpDice)}`:`${hp.min}<small>–${hp.max}</small>`;
   h+=`<div class="stat accent wide"><div class="k">Hit points ${hasToughness()?'· Toughness':''}</div>
@@ -1966,7 +2025,7 @@ function renderSheet(){
     tl.innerHTML="";
     names.sort().forEach(name=>{
       const t=TALENTS.find(x=>x.name===name), d=S.talents[name], m=meta(name);
-      const bad=t&&!evalReq(t.req).ok, cost=talentCost(name,d);
+      const bad=t&&!evalReq(t.req,name).ok, cost=talentCost(name,d);
       let detail="";
       if(m.kind==="schoolspec"||m.kind==="sourcespec"){ const lv=schoolLevels(d); detail=Object.entries(lv).filter(([,l])=>l>0).map(([s,l])=>`${s} ${l}`).join(", "); }
       else if(d.choices&&d.choices.length) detail=d.choices.join(", ");
@@ -2799,7 +2858,7 @@ function renderSheetView(){
   let H="";
   H+=`<div class="sv-head">
     <div><div class="sv-name">${esc(S.name||"Unnamed wanderer")}</div>
-      <div class="sv-sub">${S.species?`<b>${esc(S.species)}</b>${S.lineage?` (${esc(S.lineage)})`:""} · `:""}Level <b>${S.level}</b> · Start talents <b>${S.budget}</b> · Proficiency <b>${pb>=0?'+':''}${pb}</b> · Talents spent <b>${spent()}/${totalTalents()}</b></div>
+      <div class="sv-sub">${S.species?`<b>${esc(S.species)}</b>${curLineage()?` (${esc(curLineage())})`:""} · `:""}Level <b>${S.level}</b> · Start talents <b>${S.budget}</b> · Proficiency <b>${pb>=0?'+':''}${pb}</b> · Talents spent <b>${spent()}/${totalTalents()}</b></div>
       <div class="sv-sub">${esc(charSize())} · Speed <b>${curSpeed()}</b> ft${darkvisionFt()?` · Darkvision ${darkvisionFt()} ft`:""}</div></div>
     <div class="sv-head-btns"><button class="sv-print" id="svPrint">Print</button></div></div>`;
 
@@ -2953,7 +3012,7 @@ function renderSheetView(){
   H+=`<div class="sv-block"><h3>Talents <span class="cnt">${tn.length}</span></h3>`;
   if(!tn.length) H+=`<div class="sv-empty">No talents chosen.</div>`;
   else tn.forEach(n=>{ const t=TALENTS.find(x=>x.name===n); const d=S.talents[n],mm=meta(n);
-    const bad=t&&!evalReq(t.req).ok, cost=talentCost(n,d), det=talentDetailText(n,d,mm);
+    const bad=t&&!evalReq(t.req,n).ok, cost=talentCost(n,d), det=talentDetailText(n,d,mm);
     const use=talentUse(n);
     let useBar="";
     if(use){
@@ -3193,11 +3252,9 @@ function setSpecies(name){
   if(S.species===nm) return;
   S.species = nm;
   const d = speciesDef(nm);
-  S.lineage = (d && d.lineages) ? d.lineages[0].n : null;
   S.specSize = (d && d.sizes) ? d.sizes[0] : null;
   renderAll();
 }
-function setLineage(l){ if(!curSpecies()) return; S.lineage=l; renderAll(); }
 function setSpecSize(z){ const d=curSpecies(); if(!d||!d.sizes) return; S.specSize=z; renderAll(); }
 function setAttr(k,dir){
   const cur=S.attr[k];
@@ -3231,7 +3288,7 @@ function setSkillTier(name,T){
 }
 
 const ensure=name=>{ if(!S.talents[name])S.talents[name]={level:0,choices:[]}; return S.talents[name]; };
-function addTalent(name){ const t=TALENTS.find(x=>x.name===name); if(!t||!evalReq(t.req).ok||remaining()<1)return; ensure(name).level=1; renderAll(); }
+function addTalent(name){ const t=TALENTS.find(x=>x.name===name); if(!t||!evalReq(t.req,name).ok||remaining()<1)return; ensure(name).level=1; renderAll(); }
 function lvlUp(name){ const m=meta(name); if(remaining()<1)return; const d=ensure(name); if(m.kind==="leveled"&&d.level>=m.max)return; d.level++; renderAll(); }
 function lvlDn(name){ const d=S.talents[name]; if(!d)return; d.level--; if(d.level<=0)removeTalent(name); else renderAll(); }
 function removeTalent(name){ delete S.talents[name]; delete S.open[name]; renderAll(); }
@@ -3337,7 +3394,6 @@ function wire(){
   $("skills").addEventListener("click",e=>{const b=e.target.closest(".pip"); if(b)clickSkillTier(b.dataset.skill,+b.dataset.tier);});
   $("speciesPanel").addEventListener("click",e=>{
     const sc=e.target.closest("[data-species]"); if(sc){ setSpecies(sc.dataset.species); return; }
-    const ln=e.target.closest("[data-lineage]"); if(ln){ setLineage(ln.dataset.lineage); return; }
     const sz=e.target.closest("[data-specsize]"); if(sz){ setSpecSize(sz.dataset.specsize); return; }
   });
   $("search").addEventListener("input",e=>{UI.search=e.target.value;renderTalents();});
