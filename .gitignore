@@ -11,3 +11,6 @@ dm-private/
 __pycache__/
 *.pyc
 node_modules/
+
+# dev screenshots — keep them out of the public site
+Claude outputs/
