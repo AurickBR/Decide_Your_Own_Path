@@ -16,6 +16,21 @@ step. Open the live site, or fork the repo and run your own copy:
 | `compendium-and-bestiary.html` | Rules, creatures and lore reference |
 | `encounter-control.html` | DM combat tracker |
 | `dm-loom.html` | DM worldbuilding forge and codex |
+| `legal.html` | Full licensing notice |
+
+## Working on it
+
+Players need nothing installed. To change the tools, edit the HTML, then:
+
+```
+npm install        # once — pulls jsdom for the tests
+npm run build      # regenerates spells, conditions, session codec, menu, then stamps
+npm test           # 17 suites; must pass before you commit
+```
+
+The campaign name, Drive folder and file names live in one block near the bottom of
+`index.html` (`CAMPAIGN`, `BASE`, `FILES`). After changing it, `npm run build` copies it into
+the menu on every other page. `tools/README.md` explains each generator.
 
 ## Licensing
 
