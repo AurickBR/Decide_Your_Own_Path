@@ -7,6 +7,11 @@
  *
  * TM is now the only place a cap lives.
  *
+ * Species talents (added 2026-09-22) carry the `Species` tag and live in the builder only —
+ * they are generated from the SPECIES constant, and the compendium has no Species chapter yet
+ * (SPECIES_EVALUATION.md §6). The parity checks below therefore compare the 102 CORE talents,
+ * and the species set is counted on its own so neither side can drift silently.
+ *
  * Run:  npm install   (once)
  *       node test/talents.test.js
  */
@@ -26,7 +31,13 @@ const E=c=>B.w.eval(c), Ec=c=>C.w.eval(c);
 console.log('BOOT');
 ok('builder boots clean', B.errs.length===0, B.errs[0]);
 ok('compendium boots clean', C.errs.length===0, C.errs[0]);
-ok('102 talents in the builder', E('TALENTS.length')===102, E('TALENTS.length'));
+const CORE='TALENTS.filter(t=>!(t.tags||[]).includes("Species"))';
+ok('102 core talents in the builder', E(CORE+'.length')===102, E(CORE+'.length'));
+ok('33 species talents in the builder (9 traits + 24 lineages)',
+   E('TALENTS.filter(t=>(t.tags||[]).includes("Species")).length')===33,
+   E('TALENTS.filter(t=>(t.tags||[]).includes("Species")).length'));
+ok('every lineage talent is also tagged Species',
+   E('TALENTS.filter(t=>(t.tags||[]).includes("Lineage")&&!(t.tags||[]).includes("Species")).length')===0);
 ok('102 in the compendium', Ec('Object.keys(TALENT_DB).length')===102, Ec('Object.keys(TALENT_DB).length'));
 
 console.log('ONE SOURCE OF TRUTH FOR CAPS');
@@ -52,9 +63,9 @@ ok('a talent with no TM entry defaults to single',
    E('JSON.stringify(meta("Toughness"))'));
 
 console.log('BOTH TOOLS LIST THE SAME TALENTS');
-const bNames=JSON.parse(E('JSON.stringify(TALENTS.map(t=>t.name).sort())'));
+const bNames=JSON.parse(E('JSON.stringify('+CORE+'.map(t=>t.name).sort())'));
 const cNames=JSON.parse(Ec('JSON.stringify(Object.keys(TALENT_DB).sort())'));
-ok('the compendium knows every talent the builder offers',
+ok('the compendium knows every core talent the builder offers',
    bNames.every(n=>cNames.includes(n)), bNames.filter(n=>!cNames.includes(n)).join(', '));
 ok('and offers none the builder does not',
    cNames.every(n=>bNames.includes(n)), cNames.filter(n=>!bNames.includes(n)).join(', '));
@@ -74,7 +85,7 @@ const bad=JSON.parse(E(`(()=>{
   }
   return JSON.stringify(out);
 })()`));
-ok('every one of the 102 requirements evaluates cleanly', bad.length===0, bad.slice(0,3).join(' | '));
+ok('every requirement (core and species) evaluates cleanly', bad.length===0, bad.slice(0,3).join(' | '));
 ok('every clause is labelled for the UI',
    E('TALENTS.every(t=>evalReq(t.req).clauses.every(c=>typeof c.label==="string" && c.label.length))'));
 
