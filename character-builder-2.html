@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231b1e28'/%3E%3Cg transform='translate%283 3%29 scale%28.75%29' fill='none' stroke='%23d3b483' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/g%3E%3C/svg%3E">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Decide Your Own Path — Character Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -647,16 +648,58 @@ input,select{font-family:inherit}
 @media(prefers-reduced-motion:reduce){ .rest-anim.go .ra-arcwrap,.ra-sky::after,.ra-stars,.ra-moon,.ra-recovered{transition-duration:.2s} .ra-fl,.ra-spark{animation:none} }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 
+/* phone widths: nothing may push the page sideways (checked at 320/375/414 px) */
+.ledger-top .val{white-space:nowrap}
+.ledger-top .lbl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+.skills{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:920px){
   .grid{grid-template-columns:1fr}
   .side{position:static}
   .ledger{margin-left:0; width:100%}
-  .ledger-meter{flex:1}
+  .ledger-meter{flex:1; min-width:0}
 }
 @media(max-width:560px){
-  .attrs{grid-template-columns:repeat(2,1fr)}
+  .attrs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .skills{grid-template-columns:minmax(0,1fr)}
+  .build-tabs .bt{min-width:0}
   .masthead-inner{gap:12px}
   .name-field input{width:150px}
+}
+@media(max-width:430px){
+  .build-tabs .bt .ico{display:none}
+  .ledger{gap:10px}
+  .ledger-top{gap:6px}
+  .ledger-top .lbl{letter-spacing:.08em}
+}
+/* Header whenever it wraps (phones, tablets, narrow windows): once you scroll, only its last row (Build/Sheet + the ledger)
+   stays pinned; the name, level and start-talent fields scroll away with the page. fitMasthead()
+   measures the rows and sets --mh-top (a negative sticky offset) and --mh-vis (the height left
+   showing), so the sticky build tabs always sit just below whatever is visible. Without the
+   script the header simply stays fully pinned, as before. */
+.build-tabs{top:calc(var(--mh-vis,66px) + 8px)}
+.side{top:calc(var(--mh-vis,74px) + 12px)}
+.masthead{top:var(--mh-top,0px)}
+@media(max-width:560px){
+  .brand .sub{display:none}
+  .masthead-inner{row-gap:10px}
+  .name-field{flex:1 1 130px; min-width:0}
+  .name-field input{width:100%}
+  .num-field input{width:60px}
+  .mh-field label{letter-spacing:.08em}
+}
+/* Touch screens: every small control gets a hit area of at least 24px. An invisible ::after
+   stretches the target, so the look is unchanged; only the temp-HP steppers grow visibly. */
+@media (pointer:coarse), (max-width:560px){
+  .roll-btn,.dl-clear,.hd-roll,.cond-read{position:relative}
+  .save-toggle::after,.roll-btn::after,.dl-clear::after,.hd-roll::after,.cond-read::after{content:""; position:absolute}
+  .save-toggle::after{inset:-5px -4px}
+  .roll-btn::after{inset:-7px -2px}
+  .dl-clear::after{inset:-7px -6px}
+  .hd-roll::after{inset:-5px -2px}
+  .cond-read::after{inset:-3px}
+  .thp-btn{width:28px; height:28px; font-size:1rem}
+  .avail-toggle{min-height:28px}
+  .avail-toggle input{width:18px; height:18px}
 }
 @media print{
   .masthead,.talent-controls,.io-row,.step-btn,.add-btn,.lvl-step,.rm-btn,.save-toggle,.roll-btn,.avail-toggle{display:none!important}
@@ -1189,7 +1232,7 @@ input,select{font-family:inherit}
     <div class="ds-head"><span>★ Saved Rolls</span></div>
     <div class="ds-list" id="diceSavedList"></div>
     <div class="ds-form" id="diceSaveForm" hidden>
-      <input id="diceSaveName" class="ds-input" type="text" maxlength="28" placeholder="Name this roll (e.g. Longsword)…" autocomplete="off">
+      <input id="diceSaveName" class="ds-input" type="text" aria-label="Name this roll" maxlength="28" placeholder="Name this roll (e.g. Longsword)…" autocomplete="off">
       <button class="ds-confirm" id="diceSaveConfirm">Save</button>
       <button class="ds-cancel" id="diceSaveCancel" aria-label="Cancel">✕</button>
     </div>
@@ -3879,8 +3922,26 @@ function spellText(sp){
   return spellTextCache[sp.n];
 }
 
+/* ============ header fit (see the CSS note on --mh-top / --mh-vis) ============ */
+function fitMasthead(){
+  const mh=document.querySelector(".masthead"), led=document.querySelector(".masthead .ledger");
+  if(!mh || !led) return;
+  /* only when the ledger has wrapped onto a row of its own — on a one-row desktop header, hide nothing */
+  const off=Math.round(led.getBoundingClientRect().top - mh.getBoundingClientRect().top);
+  const hide=off>40 ? off-8 : 0;
+  const root=document.documentElement.style;
+  root.setProperty("--mh-top", (-hide)+"px");
+  root.setProperty("--mh-vis", (mh.offsetHeight-hide)+"px");
+}
+function wireMasthead(){
+  fitMasthead();
+  const mh=document.querySelector(".masthead");
+  if(mh && window.ResizeObserver) new ResizeObserver(fitMasthead).observe(mh);
+  window.addEventListener("resize", fitMasthead);
+}
+
 /* ============ boot ============ */
-load(); renderTagbar(); renderAll(); wire(); wireDice(); applySub(); decorateIcons();
+load(); renderTagbar(); renderAll(); wire(); wireDice(); applySub(); decorateIcons(); wireMasthead();
 
 </script>
 
@@ -4104,7 +4165,7 @@ a.dyop-nav-chip svg{width:13px; height:13px; flex:none}
 
   var HERE     = "character-builder-2.html";
   var BASE     = "https://aurickbr.github.io/Decide_Your_Own_Path/";
-  var CAMPAIGN = {"name": "Tales of Norrath"};
+  var CAMPAIGN = {"name": "This is Your Quest"};
   var TOOLS    = [{"key": "builder", "file": "character-builder-2.html", "name": "Character Builder", "desc": "Your sheet, levelling and play", "dm": false, "ico": "<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>"}, {"key": "journal", "file": "journal.html", "name": "Adventure Journal", "desc": "Locations, NPCs, quests, memories", "dm": false, "ico": "<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/>"}, {"key": "compendium", "file": "compendium-and-bestiary.html", "name": "Compendium & Bestiary", "desc": "Rules, creatures and lore", "dm": false, "ico": "<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/><path d=\"M9 7h6M9 11h4\"/>"}, {"key": "encounter", "file": "encounter-control.html", "name": "Encounter Control", "desc": "Initiative, damage, the combat record", "dm": true, "ico": "<circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.35-4.35\"/>"}, {"key": "loom", "file": "dm-loom.html", "name": "The Loom", "desc": "Worldbuilding forge and campaign codex", "dm": true, "ico": "<path d=\"M12 2l2.4 5.8L20 9l-4.5 4 1.3 6L12 16l-4.8 3 1.3-6L4 9l5.6-1.2L12 2Z\"/>"}];
   var EXTRAS   = [{"label": "Portal", "href": "https://aurickbr.github.io/Decide_Your_Own_Path/index.html", "external": false, "ico": "<path d=\"m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z\"/><path d=\"M9 21v-8h6v8\"/>"}, {"label": "Shared folder", "href": "https://drive.google.com/drive/folders/1na86nL-HkNgEklsKaCN4i_vu-ysKl3Hc?usp=sharing", "external": true, "ico": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>"}, {"label": "Licensing", "href": "https://aurickbr.github.io/Decide_Your_Own_Path/legal.html", "external": false, "ico": "<path d=\"M12 3v18\"/><path d=\"M5 7h14\"/><path d=\"m5 7-2 6a3 3 0 0 0 6 0Z\"/><path d=\"m19 7 2 6a3 3 0 0 1-6 0Z\"/>"}];
 
@@ -4260,6 +4321,6 @@ a.dyop-nav-chip svg{width:13px; height:13px; flex:none}
 <!-- DYOP-NAV end -->
 <!-- build stamp — generated by tools/stamp_build.py; do not edit by hand -->
 <style>.dyop-build{max-width:1000px;margin:0 auto;padding:0 20px 26px;text-align:center;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.58rem;letter-spacing:.11em;text-transform:uppercase;color:#8a8fa0;opacity:.55}.dyop-build b{font-weight:400;color:#d3b483;opacity:.9}@media print{.dyop-build{display:none!important}}</style>
-<div class="dyop-build" data-build="2026-09-19" data-rev="0c01b9c">character-builder-2.html &middot; build 2026-09-19 &middot; <b>0c01b9c</b></div>
+<div class="dyop-build" data-build="2026-09-22" data-rev="ccca6f6">character-builder-2.html &middot; build 2026-09-22 &middot; <b>ccca6f6</b></div>
 </body>
 </html>
