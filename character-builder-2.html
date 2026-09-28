@@ -13,7 +13,7 @@
 :root{
   --bg:#14161f; --panel:#1b1e28; --raised:#232734; --line:#30354598;
   --line-solid:#303545; --ink:#d8d3c3; --bone:#ece6d6; --muted:#8a8fa0;
-  --verd:#6cc0a1; --verd-deep:#3f8f75; --violet:#a596e0; --rust:#dd6b57;
+  --verd:#6cc0a1; --verd-deep:#3f8f75; --verd-fill:#357a64; --violet:#a596e0; --rust:#e27764;
   --gold:#d3b483; --shadow:0 1px 0 #ffffff08, 0 8px 24px -12px #000000aa;
 }
 *{box-sizing:border-box}
@@ -111,7 +111,7 @@ input,select{font-family:inherit}
 .pip.dim:not(.on){opacity:.34; border-style:dashed}
 .pip.dim:not(.on):hover{opacity:.7}
 .chip-count b.tight{color:var(--rust)}
-.pip.on.p1{background:var(--verd-deep); border-color:var(--verd); color:#eafff6}
+.pip.on.p1{background:var(--verd-fill); border-color:var(--verd); color:#eafff6}
 .pip.on.p2{background:#4f9e83; border-color:var(--verd); color:#eafff6}
 .pip.on.p3{background:var(--gold); border-color:#e6c99a; color:#241d10}
 
@@ -172,14 +172,14 @@ input,select{font-family:inherit}
 
 /* choices block */
 .choices{padding:11px 14px; border-top:1px dashed var(--line-solid); background:#ffffff04}
-.ch-lbl{font-size:.66rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:8px}
-.ch-lbl em{text-transform:none; letter-spacing:0; font-size:.9em; color:#6d7284}
+.ch-lbl{font-size:.66rem; text-transform:uppercase; letter-spacing:.12em; color:#9499aa; margin-bottom:8px}
+.ch-lbl em{text-transform:none; letter-spacing:0; font-size:.9em; color:#9499aa}
 .ch-n{color:var(--verd); border:1px solid var(--line-solid); border-radius:20px; padding:1px 8px; font-size:.7rem; margin-left:4px}
 .ch-n.full{color:var(--gold); border-color:#5a4a2e}
 .opts{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
 .opt{font-size:.78rem; padding:5px 11px; border-radius:20px; border:1px solid var(--line-solid); background:#0f111a; color:var(--ink); transition:.12s}
 .opt:hover:not(:disabled):not(.on){border-color:var(--verd-deep); color:var(--bone)}
-.opt.on{background:var(--verd-deep); color:#eafff6; border-color:var(--verd)}
+.opt.on{background:var(--verd-fill); color:#eafff6; border-color:var(--verd)}
 .opt:disabled{opacity:.32; cursor:not-allowed}
 .opt.freetag{display:inline-flex; align-items:center; gap:6px; cursor:default}
 .opt.freetag .x{background:none; border:none; color:#eafff6aa; font-size:1rem; line-height:1; padding:0; cursor:pointer}
@@ -243,13 +243,13 @@ input,select{font-family:inherit}
 .arm-row.notprof{opacity:.62}
 .add-chip{flex:0 0 auto; font-size:.62rem; font-family:"JetBrains Mono",monospace; color:var(--verd); border:1px solid var(--verd-deep); border-radius:20px; padding:3px 9px; white-space:nowrap; background:transparent; cursor:pointer}
 .add-chip.owned{color:var(--muted); border-color:var(--line-solid)}
-.add-chip:hover:not(.owned){background:var(--verd-deep); color:#eafff6}
+.add-chip:hover:not(.owned){background:var(--verd-fill); color:#eafff6}
 
 /* equipment section sub-nav */
 .eq-tabs{display:flex; gap:4px; background:var(--panel); border:1px solid var(--line-solid); border-radius:11px; padding:5px; margin-bottom:16px}
 .eq-tabs .et{flex:1; background:transparent; border:none; color:var(--muted); font-family:"IM Fell English",serif; font-size:.9rem; padding:8px 10px; border-radius:8px; transition:.12s}
 .eq-tabs .et:hover:not(.on){color:var(--bone); background:#ffffff08}
-.eq-tabs .et.on{background:var(--verd-deep); color:#eafff6}
+.eq-tabs .et.on{background:var(--verd-fill); color:#eafff6}
 .prof-head{display:flex; gap:10px; align-items:baseline; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line)}
 .prof-head .ph-k{font-size:.62rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
 .prof-head .ph-v{font-size:.82rem; color:var(--bone)}
@@ -267,7 +267,7 @@ input,select{font-family:inherit}
 .inv-btns{display:flex; gap:7px; flex:0 0 auto}
 .wear-btn{background:transparent; border:1px solid var(--line-solid); color:var(--ink); border-radius:7px; padding:6px 13px; font-size:.76rem; text-transform:capitalize; transition:.12s}
 .wear-btn:hover:not(.on){border-color:var(--verd-deep); color:var(--bone)}
-.wear-btn.on{background:var(--verd-deep); color:#eafff6; border-color:var(--verd)}
+.wear-btn.on{background:var(--verd-fill); color:#eafff6; border-color:var(--verd)}
 
 /* durability */
 .dur-wrap{display:flex; align-items:center; gap:8px; margin-top:2px}
@@ -313,7 +313,7 @@ input,select{font-family:inherit}
 .ip-filter{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px}
 .ip-fchip{font-size:.68rem; font-family:"JetBrains Mono",monospace; letter-spacing:.02em; color:var(--muted); background:#0f111a; border:1px solid var(--line-solid); border-radius:20px; padding:4px 11px; cursor:pointer; transition:.1s}
 .ip-fchip:hover:not(.on){border-color:var(--verd-deep); color:var(--bone)}
-.ip-fchip.on{background:var(--verd-deep); color:#eafff6; border-color:var(--verd)}
+.ip-fchip.on{background:var(--verd-fill); color:#eafff6; border-color:var(--verd)}
 .ip-cols.one{grid-template-columns:1fr}
 .ip-col.wide{max-height:360px}
 .ip-col .ip-group{margin-top:6px}
@@ -335,20 +335,20 @@ input,select{font-family:inherit}
 .ac-pill{font-family:"JetBrains Mono",monospace; font-size:.62rem; color:var(--gold); background:#ffffff08; border:1px solid var(--line-solid); border-radius:20px; padding:1px 7px; vertical-align:middle; font-style:normal}
 .pf-badge.master{background:#231a08; border-color:#5a4a2e; color:var(--gold)}
 .wpick{border:1px solid var(--line-solid); background:#0f111a; color:var(--muted); border-radius:7px; padding:5px 9px; font-size:.7rem}
-.wpick.on{background:var(--verd-deep); color:#eafff6; border-color:var(--verd)}
+.wpick.on{background:var(--verd-fill); color:#eafff6; border-color:var(--verd)}
 .wpick:disabled{opacity:.35; cursor:not-allowed}
 
 /* ---------- View toggle ---------- */
 .view-toggle{display:flex; background:#0f111a; border:1px solid var(--line-solid); border-radius:8px; padding:3px; gap:2px}
 .vt{background:transparent; border:none; color:var(--muted); font-family:"IM Fell English",serif; font-size:.82rem; letter-spacing:.08em; padding:6px 14px; border-radius:6px; transition:.12s}
 .vt:hover:not(.on){color:var(--bone)}
-.vt.on{background:var(--verd-deep); color:#eafff6}
+.vt.on{background:var(--verd-fill); color:#eafff6}
 
 /* ---------- Build sub-tabs ---------- */
 .build-tabs{display:flex; gap:4px; background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; padding:5px; position:sticky; top:74px; z-index:20; box-shadow:var(--shadow)}
 .build-tabs .bt{flex:1; background:transparent; border:none; color:var(--muted); font-family:"IM Fell English",serif; font-size:.92rem; letter-spacing:.05em; padding:9px 10px; border-radius:8px; transition:.12s}
 .build-tabs .bt:hover:not(.on){color:var(--bone); background:#ffffff08}
-.build-tabs .bt.on{background:var(--verd-deep); color:#eafff6}
+.build-tabs .bt.on{background:var(--verd-fill); color:#eafff6}
 .build-pane{margin-top:18px}
 @media(max-width:560px){ .build-tabs .bt{font-size:.8rem; padding:8px 4px} }
 
@@ -364,7 +364,7 @@ input,select{font-family:inherit}
 .sv-tabs{display:flex; gap:4px; background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; padding:5px; margin-bottom:20px; box-shadow:var(--shadow)}
 .sv-tabs .st{flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; background:transparent; border:none; color:var(--muted); font-family:"IM Fell English",serif; font-size:.92rem; letter-spacing:.05em; padding:9px 10px; border-radius:8px; cursor:pointer; transition:.12s}
 .sv-tabs .st:hover:not(.on){color:var(--bone); background:#ffffff08}
-.sv-tabs .st.on{background:var(--verd-deep); color:#eafff6}
+.sv-tabs .st.on{background:var(--verd-fill); color:#eafff6}
 .sv-tabs .st .ico{width:16px; height:16px}
 @media(max-width:560px){ .sv-tabs .st{font-size:.8rem; padding:8px 4px; gap:5px} .sv-tabs .st .ico{width:15px; height:15px} }
 .sv-head{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; border-bottom:2px solid var(--verd-deep); padding-bottom:14px; margin-bottom:22px}
@@ -398,7 +398,7 @@ input,select{font-family:inherit}
 .hd-inline{color:var(--gold); font-family:"JetBrains Mono",monospace; font-style:normal}
 .hd-note{color:var(--muted)}
 .hd-roll{font-family:"JetBrains Mono",monospace; font-size:.6rem; letter-spacing:.03em; color:var(--verd); background:transparent; border:1px solid var(--verd-deep); border-radius:20px; padding:2px 9px; margin-left:6px; cursor:pointer; transition:.12s; vertical-align:middle; font-style:normal}
-.hd-roll:hover:not(:disabled){background:var(--verd-deep); color:#eafff6}
+.hd-roll:hover:not(:disabled){background:var(--verd-fill); color:#eafff6}
 .hd-roll:disabled{opacity:.4; cursor:not-allowed}
 /* temporary HP — distinct shield-blue buffer control in the HP card */
 .thp-line{display:flex; align-items:center; justify-content:center; gap:6px; margin-top:7px; padding-top:7px; border-top:1px solid var(--line)}
@@ -745,7 +745,7 @@ input,select{font-family:inherit}
 .ds-form{display:flex; gap:6px; margin-top:8px}
 .ds-input{flex:1; min-width:0; background:var(--raised); border:1px solid var(--line-solid); color:var(--bone); border-radius:8px; padding:6px 9px; font-size:.8rem; font-family:inherit}
 .ds-input:focus{outline:none; border-color:var(--verd)}
-.ds-confirm{background:var(--verd-deep); border:1px solid var(--verd); color:#eafff6; border-radius:8px; padding:5px 12px; font-size:.72rem; cursor:pointer; flex:0 0 auto}
+.ds-confirm{background:var(--verd-fill); border:1px solid var(--verd); color:#eafff6; border-radius:8px; padding:5px 12px; font-size:.72rem; cursor:pointer; flex:0 0 auto}
 .ds-confirm:hover{background:var(--verd)}
 .ds-cancel{background:transparent; border:1px solid var(--line-solid); color:var(--muted); border-radius:8px; padding:5px 9px; font-size:.72rem; cursor:pointer; flex:0 0 auto}
 .ds-cancel:hover{color:var(--bone)}
@@ -846,7 +846,7 @@ input,select{font-family:inherit}
 .atkp-f input:focus{outline:1px solid var(--verd-deep)}
 .atkp-f.ac input,.atkp-f.bonus input{width:74px; text-align:center}
 .atkp-f.rider input{width:170px; font-family:inherit}
-.atkp-roll{margin-left:auto; background:var(--verd-deep); border:1px solid var(--verd); color:#eafff6; border-radius:9px; padding:8px 16px; font-size:.86rem}
+.atkp-roll{margin-left:auto; background:var(--verd-fill); border:1px solid var(--verd); color:#eafff6; border-radius:9px; padding:8px 16px; font-size:.86rem}
 .atkp-roll:hover{background:#4a9d82}
 .atkp-close{background:transparent; border:1px solid var(--line-solid); color:var(--muted); border-radius:8px; padding:7px 11px; font-size:.76rem}
 .atkp-close:hover{color:var(--bone); border-color:var(--rust)}
@@ -938,7 +938,7 @@ input,select{font-family:inherit}
 .upd-in:focus{outline:none; border-color:var(--verd-deep)}
 .upd-acts{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:8px}
 .upd-read,.upd-apply,.upd-ignore{border-radius:7px; padding:6px 13px; font-size:.78rem; cursor:pointer; border:1px solid var(--line-solid); transition:.12s}
-.upd-read,.upd-apply{background:var(--verd-deep); border-color:var(--verd); color:#eafff6}
+.upd-read,.upd-apply{background:var(--verd-fill); border-color:var(--verd); color:#eafff6}
 .upd-read:hover,.upd-apply:hover{background:var(--verd); color:#0b1512}
 .upd-ignore{background:var(--raised); color:var(--muted)}
 .upd-ignore:hover{border-color:var(--rust); color:var(--rust)}
@@ -3394,9 +3394,18 @@ const cssq=s=>String(s).replace(/["\\]/g,"\\$&");
 
 /* ============ io ============ */
 function toast(m,kind){ const t=$("toast"); t.textContent=m; const err = kind==="error" || /not enough|no talent points|no expertise|no mastery|no trained|need \d|available \(/i.test(m); t.classList.toggle("err",!!err); t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),1900); }
-function copyText(text){
-  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text); return true; } }catch(e){}
+/* Copy to the clipboard. Resolves true only if the copy really happened: the async Clipboard API
+   can refuse (no permission, not a secure context), and an un-awaited refusal used to surface as an
+   uncaught error while the toast still claimed the JSON had been copied. */
+function copyLegacy(text){
   try{ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.top="-1000px"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select(); const ok=document.execCommand("copy"); ta.remove(); return ok; }catch(e){ return false; }
+}
+function copyText(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText)
+      return navigator.clipboard.writeText(text).then(()=>true, ()=>copyLegacy(text));
+  }catch(e){}
+  return Promise.resolve(copyLegacy(text));
 }
 function exportJSON(){
   const json=JSON.stringify(S,null,2);
@@ -3410,8 +3419,8 @@ function exportJSON(){
     setTimeout(()=>{ try{URL.revokeObjectURL(url);}catch(e){} },1000);
     downloaded=true;
   }catch(e){ downloaded=false; }
-  const copied=copyText(json);
-  toast(downloaded ? (copied?"Exported — file downloaded & copied to clipboard":"Character exported") : (copied?"Download blocked here — JSON copied to clipboard instead":"Export failed — try the downloaded file"));
+  copyText(json).then(copied=>
+    toast(downloaded ? (copied?"Exported — file downloaded & copied to clipboard":"Character exported") : (copied?"Download blocked here — JSON copied to clipboard instead":"Export failed — try the downloaded file")));
 }
 function printSheet(){
   if(UI.view!=="sheet") setView("sheet");
@@ -4321,6 +4330,6 @@ a.dyop-nav-chip svg{width:13px; height:13px; flex:none}
 <!-- DYOP-NAV end -->
 <!-- build stamp — generated by tools/stamp_build.py; do not edit by hand -->
 <style>.dyop-build{max-width:1000px;margin:0 auto;padding:0 20px 26px;text-align:center;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.58rem;letter-spacing:.11em;text-transform:uppercase;color:#8a8fa0;opacity:.55}.dyop-build b{font-weight:400;color:#d3b483;opacity:.9}@media print{.dyop-build{display:none!important}}</style>
-<div class="dyop-build" data-build="2026-09-22" data-rev="ccca6f6">character-builder-2.html &middot; build 2026-09-22 &middot; <b>ccca6f6</b></div>
+<div class="dyop-build" data-build="2026-09-27" data-rev="6c91958">character-builder-2.html &middot; build 2026-09-27 &middot; <b>6c91958</b></div>
 </body>
 </html>
