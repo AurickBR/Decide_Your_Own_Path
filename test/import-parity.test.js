@@ -101,6 +101,18 @@ const SCENARIOS=[
                    talents:{"Armor is for the Weak":{level:1,choices:[]}}}],
   ['Alertness 2 — initiative', {level:5, budget:30, attr:{STR:10,DEX:16,CON:10,INT:10,WIS:10,CHA:10},
                    talents:{Alertness:{level:2,choices:[]}}}],
+  /* species (2026-09-21): Dwarven Toughness is the one species trait that reaches HP, and
+     charDerived() mirrors it by hand — SPECIES_EVALUATION.md §4 calls this the standing risk */
+  ['Dwarf, no species talents', {level:6, species:'Dwarf'}],
+  ['Dwarven Toughness', {level:1, species:'Dwarf', talents:{"Dwarven Toughness":{level:1,choices:[]}}}],
+  ['Dwarven Toughness + Toughness', {level:10, budget:40, species:'Dwarf',
+                   attr:{STR:10,DEX:10,CON:16,INT:10,WIS:10,CHA:10},
+                   talents:{"Dwarven Toughness":{level:1,choices:[]}, Toughness:{level:1,choices:[]}}}],
+  ['Dwarven Toughness + Draconic Resilience, level 20', {level:20, budget:60, species:'Dwarf',
+                   attr:{STR:10,DEX:10,CON:18,INT:10,WIS:10,CHA:10},
+                   talents:{"Dwarven Toughness":{level:1,choices:[]}, "Draconic Resilience":{level:1,choices:[]},
+                            Toughness:{level:1,choices:[]}}}],
+  ['Orc with a lineage-free build', {level:8, species:'Orc', talents:{"Relentless Endurance":{level:1,choices:[]}}}],
   ['everything at once', {level:14, budget:45,
                    attr:{STR:12,DEX:16,CON:18,INT:12,WIS:14,CHA:10},
                    hpDice:[8,6,4,7,5,8,3,6,5,7,4,8,6,5],
