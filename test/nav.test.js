@@ -107,11 +107,13 @@ catch(e){ checkOk=false; checkOut=(e.stdout||'')+(e.stderr||''); }
 ok('tools/build_nav.py --check passes', checkOk, checkOut.trim().split('\n').pop());
 
 /* ---------------------------------------------------------------- behaviour */
-function boot(f,view){
+function boot(f,view,folder){
   const vc=new VirtualConsole(); const errs=[]; vc.on('jsdomError',e=>errs.push(e.message));
   const dom=new JSDOM(read(f),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,
     url:'https://aurickbr.github.io/Decide_Your_Own_Path/'+f,
-    beforeParse(w){ if(view) try{ w.localStorage.setItem('dyop_view',view); }catch(e){} }});
+    beforeParse(w){ try{ w.localStorage.clear();
+      if(view) w.localStorage.setItem('dyop_view',view);
+      if(folder) w.localStorage.setItem('dyop_folder',folder); }catch(e){} }});
   return {w:dom.window, errs, d:dom.window.document};
 }
 
@@ -195,7 +197,7 @@ console.log('WHAT THE DM SEES');
 
 console.log('THE LINKS THEMSELVES');
 {
-  const {d}=boot('journal.html','dm');
+  const {d}=boot('journal.html','dm','https://drive.google.com/drive/folders/TEST');
   const links=[...d.querySelectorAll('a.dyop-nav-item')];
   ok('every tool link is absolute on BASE', links.every(a=>a.getAttribute('href').startsWith(BASE)));
   ok('every tool link names a file that exists',
@@ -217,6 +219,61 @@ console.log('THE LINKS THEMSELVES');
      ![...d.querySelectorAll('.dyop-nav-chip')].some(a=>/Licensing/.test(a.textContent)));
   ok('but still offers the portal',
      [...d.querySelectorAll('.dyop-nav-chip')].some(a=>/Portal/.test(a.textContent)));
+}
+
+console.log('THE SHARED FOLDER IS TYPED PER DM, NOT BAKED IN');
+{
+  const chip=d=>[...d.querySelectorAll('a.dyop-nav-chip')].find(x=>/Shared folder/.test(x.textContent));
+  ok('index.html ships no campaign folder — each DM types their own',
+     /driveFolder:\s*""/.test(read('index.html')));
+  ok('no folder saved: no Shared folder chip', !chip(boot('journal.html','player').d));
+  const url='https://drive.google.com/drive/folders/ABC123?usp=sharing';
+  const c=chip(boot('journal.html','player',url).d);
+  ok('the folder saved on the portal is the one the menu opens', c && c.href===url, c&&c.href);
+  ok('a non-https value is ignored', !chip(boot('journal.html','player','javascript:alert(1)').d));
+}
+{
+  /* The portal itself: type, save, share, and a player link that sets it. */
+  const portal=(hash,stored)=>{
+    const vc=new VirtualConsole(); const errs=[]; vc.on('jsdomError',e=>errs.push(e.message));
+    const dom=new JSDOM(read('index.html'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,
+      url:BASE+'index.html'+(hash||''),
+      beforeParse(w){ w.localStorage.clear(); if(stored) for(const k in stored) w.localStorage.setItem(k,stored[k]); }});
+    return {w:dom.window,d:dom.window.document,errs};
+  };
+  let {w,d,errs}=portal();
+  ok('the portal boots clean', errs.length===0, errs[0]);
+  ok('with no folder the setter is open and the button hidden',
+     !d.getElementById('folderSet').hidden && d.getElementById('driveLink').style.display==='none');
+  d.getElementById('folderInput').value='not a link';
+  d.getElementById('folderSave').click();
+  ok('a bad value is refused', /folder-msg bad/.test(d.getElementById('folderMsg').className)
+     && w.localStorage.getItem('dyop_folder')===null);
+  d.getElementById('folderInput').value='javascript:alert(1)';
+  d.getElementById('folderSave').click();
+  ok('a javascript: link is refused', w.localStorage.getItem('dyop_folder')===null);
+  const url='https://drive.google.com/drive/folders/XYZ';
+  d.getElementById('folderInput').value='  '+url+'  ';
+  d.getElementById('folderSave').click();
+  ok('a typed folder is saved', w.localStorage.getItem('dyop_folder')===url);
+  ok('and the Shared Folder button opens it',
+     d.getElementById('driveLink').href===url && d.getElementById('driveLink').style.display!=='none');
+  ok('players are not offered the share link', d.getElementById('folderShare').hidden);
+  d.getElementById('dmToggle').click();
+  ok('the DM gets a player link carrying the folder',
+     !d.getElementById('folderShare').hidden &&
+     d.getElementById('folderShareLink').value===BASE+'index.html#folder='+encodeURIComponent(url));
+  d.getElementById('folderClear').click();
+  ok('Clear forgets it', w.localStorage.getItem('dyop_folder')===null
+     && d.getElementById('driveLink').style.display==='none');
+
+  ({w,d,errs}=portal('#folder='+encodeURIComponent(url),{dyop_folder:'https://drive.google.com/old'}));
+  ok('a player link sets (and replaces) the folder', w.localStorage.getItem('dyop_folder')===url);
+  ok('the address bar is tidied afterwards', w.location.hash==='');
+  ok('the setter folds away once a folder is set', d.getElementById('folderSet').hidden
+     && !d.getElementById('folderEdit').hidden);
+  ({w}=portal('#folder='+encodeURIComponent('javascript:alert(1)')));
+  ok('a player link cannot plant a non-https folder', w.localStorage.getItem('dyop_folder')===null);
 }
 
 console.log('IT KEEPS OUT OF THE TOOLS\' WAY');
