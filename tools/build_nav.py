@@ -224,10 +224,19 @@ JS = """<script>
 
   var foot = el("div", "dyop-nav-foot");
   EXTRAS.forEach(function(e){
-    if (!e.href) return;                                        /* no Drive folder configured */
-    if (e.href.slice(-HERE.length) === HERE) return;            /* never link a page to itself */
+    var href = e.href;
+    /* The shared folder is typed per DM / campaign on the portal and saved in this browser; the
+       index.html value is only a fallback. Only https links are honoured. */
+    if (e.stored) {
+      try {
+        var s = localStorage.getItem(e.stored);
+        if (s && s.slice(0, 8).toLowerCase() === "https://" && s.indexOf(" ") < 0) href = s;
+      } catch (err) { /* storage blocked: keep the fallback */ }
+    }
+    if (!href) return;                                          /* no folder set anywhere */
+    if (href.slice(-HERE.length) === HERE) return;              /* never link a page to itself */
     var a = el("a", "dyop-nav-chip");
-    a.href = e.href;
+    a.href = href;
     if (e.external) { a.target = "_blank"; a.rel = "noopener"; }
     a.appendChild(svg(e.ico));
     a.appendChild(document.createTextNode(e.label));
@@ -316,7 +325,7 @@ def block_for(page, cfg):
     extras = [
         dict(label='Portal', href=cfg['base'] + 'index.html', external=False,
              ico='<path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 21v-8h6v8"/>'),
-        dict(label='Shared folder', href=cfg['drive'], external=True,
+        dict(label='Shared folder', href=cfg['drive'], external=True, stored='dyop_folder',
              ico='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>'),
         dict(label='Licensing', href=cfg['base'] + 'legal.html', external=False,
              ico='<path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-2 6a3 3 0 0 0 6 0Z"/><path d="m19 7 2 6a3 3 0 0 1-6 0Z"/>'),
